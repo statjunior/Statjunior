@@ -48,7 +48,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/projets-r-statjunior/cnt")
+setwd <- setwd("C:/Users/Documents/GitHub/Statjunior/projets-r-statjunior/cnt")
 getwd()
 ```
 
@@ -84,7 +84,7 @@ scale_2000t1 <- function(x, na.rm = FALSE) x/x[rdb_menages[,1] == "2000-01-01"]*
 # Décomposition du taux de marge des sociétés non financières, 4e trimestre 2022, Comptes définitifs :https://www.insee.fr/fr/statistiques/6960363?sommaire=6795771#titre-bloc-7
 
 #Télécharger et charger le fichier de décomposition des taux de marge des SNF 
-file_decompo_tx_marge_snf <- "t_txmargesnf_val.xls"
+file_decompo_tx_marge_snf <- "data/t_txmargesnf_val.xls"
 
 ####Import des excels précédemment téléchargés à la main...
 
@@ -195,7 +195,7 @@ pib_eer <- filter(pib_2014_bis, TITLE_FR2 !="contrib_pib" | is.na(TITLE_FR2)) |>
 
 ####Bien télécharger Pouvoir d'achat et ratio du compte des ménages: 
 #https://www.insee.fr/fr/statistiques/6960365?sommaire=6795771 
-file_rdb_uc <- "t_pouvachat_val.xls"
+file_rdb_uc <- "data/t_pouvachat_val.xls"
 rdb_uc <- read_excel(file_rdb_uc,  sheet = "Evolutions", skip = 7) |>
    select("...1", "B6/UC", "(B6/P3prix)/UC") |>
    rename(DATE = "...1", rd_uc = "B6/UC", pa_rdb_uc = "(B6/P3prix)/UC")

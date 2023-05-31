@@ -48,7 +48,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/projets-r-statjunior/cnt")
+setwd <- setwd("C:/Users/Documents/GitHub/Statjunior/projets-r-statjunior/cnt/")
 getwd()
 #  DATE ==max(full_tx_marge_2018t4$DATE[full_tx_marge_2018t4$DATE!=max(full_tx_marge_2018t4$DATE)])
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
@@ -84,10 +84,10 @@ Le rapport se conclut enfin par un développement détaillé des marges sectorie
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 #Télécharger et charger le fichier des imports et des exports en valeurs   
-file_export_val <- "t_exports_val.xls"
-file_import_val <- "t_imports_val.xls"
+file_export_val <- "data/t_exports_val.xls"
+file_import_val <- "data/t_imports_val.xls"
 #Télécharger et charger le fichier de décomposition des taux de marge des SNF 
-file_decompo_tx_marge_snf <- "t_txmargesnf_val.xls"
+file_decompo_tx_marge_snf <- "data/t_txmargesnf_val.xls"
 
 ####Import des excels précédemment téléchargés à la main...
 #Export en valeurs 
