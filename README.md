@@ -1,4 +1,4 @@
-*** Mise à disposition de mes codes Twitter 
+# Mise à disposition de mes codes Twitter 
 Crédits @statjunior
 
 Bienvenue sur ma page Git qui vous permet de répliquer mes codes et de télécharger mes rapports Rmarkdown afin de visualiser tous mes graphiques. 
