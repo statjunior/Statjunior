@@ -1,3 +1,6 @@
+*** Mise à disposition de mes codes Twitter 
+Crédits @statjunior
+
 Bienvenue sur ma page Git qui vous permet de répliquer mes codes et de télécharger mes rapports Rmarkdown afin de visualiser tous mes graphiques. 
 
 Les codes sources sont au format Rmarkdown. Les rapports sont au format ".html" et doivent être téléchargés pour être lus.
