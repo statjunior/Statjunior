@@ -1,5 +1,5 @@
 ---
-title: "Comptes de branche. Résultats détaillés des grands indicateurs macroéconomique des Comptes Nationaux Trimestriels. "
+title: "Comptes de branche. Résultats détaillés des grands indicateurs macroéconomique des Comptes Nationaux Trimestriels."
 author: "@statjunior"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
@@ -48,7 +48,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
-setwd <- setwd("C:/Users/Documents/GitHub/Statjunior/projets-r-statjunior/cnt/")
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
 getwd()
 #  DATE ==max(full_tx_marge_2018t4$DATE[full_tx_marge_2018t4$DATE!=max(full_tx_marge_2018t4$DATE)])
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
