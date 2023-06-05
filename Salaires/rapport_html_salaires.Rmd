@@ -83,32 +83,30 @@ Dans un premier temps, on représente l'évolution du Smic et des différents in
 
 Dans un deuxième temps, on représente l'indexation du Smic par rapport à l'inflation hors tabac du 1er quintile de niveau de vie depuis 2005. 
 
-L'évolution du pouvoir d'achat du SMB (indicateur microéconomique d'évolution des salaires) est comparé au pouvoir d'achat du SMPT (Salaire Moyen par Tête de la comptabilité nationale).
-
 Enfin, on s'intéresse à l'évolution du point d'indice de la fonction publique par rapport aux prix depuis 1985.
 
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 ###Fichiers à télécharger
 ###SMB Dares : à télécharger tous les trimestres...
-smb <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", 
+smb <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", 
                                                   sheet = "Sal. mens. ensemble", skip = 5)
 
-smbo <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. ouv.", 
+smbo <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. ouv.", 
                    skip = 5)
-smbe <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. emp.", 
+smbe <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. emp.", 
                    skip = 5)
-smbpi <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. PI", 
+smbpi <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. PI", 
                     skip = 5)
-smbc <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. cadres", 
+smbc <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. cadres", 
                    skip = 5)
 
 
-indice_fp <- read_excel("data/indice_fp.xlsx")|>
+indice_fp <- read_excel("indice_fp.xlsx")|>
   rename(OBS_VALUE = cum_fp_1970)
 
-histo_smb <- read_excel("data/historique_smb_detail.xlsx")
-histo_ipc <- read_excel("data/ipc_histo.xlsx") |>
+histo_smb <- read_excel("historique_smb_detail.xlsx")
+histo_ipc <- read_excel("ipc_histo.xlsx") |>
   rename(OBS_VALUE = cum_inf_1990)
 
 ###Smic et IPC insee
@@ -362,7 +360,7 @@ plot_smic_smb_nom_2019 <-ggplot(data = base_salaires_nom,
   #geom_line(aes(y = smbc, color = "SMB Cadres"), size = 1) +
   geom_line(aes(y = ipc, color = "IPC"), size = 1.1, linetype = "twodash") +
   labs(title = "SMIC et SMB nominaux depuis le T4-2019", 
-       subtitle = "Lecture : Au T1-2023, l'indice des prix à la consommation augmente de 11 % par rapport au T4-2019, \ncontre 9 % pour le SMB. \nSource : Dares (SMB), Insee (Smic mensuel brut, IPC) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au T1-2023, l'indice des prix à la consommation augmente de X % par rapport au T4-2019, contre X % pour le salaire mensuel de base. \nSource : Dares (Salaires de base), Insee (Smic mensuel brut, Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
        y = "Base 100 au 4e trimestre 2019", x = "Date") +
   scale_x_date(limits = as.Date(c("2019-12-01", NA))) + 
   scale_color_manual(values = c("SMB"="blue",  "SMIC" = "purple", "IPC"="red")) +
@@ -374,6 +372,7 @@ plot_smic_smb_nom_2019 <-ggplot(data = base_salaires_nom,
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", size = 14, face = "italic")) + 
   ylim(99,115)
+plot_smic_smb_nom_2019
 
 #Graphique évolution pouvoir d'achat 
 plot_smic_smb_reel <-ggplot(data = base_sal_reel,
@@ -385,7 +384,7 @@ plot_smic_smb_reel <-ggplot(data = base_sal_reel,
   geom_line(aes(y = smbpi, color = "SMB Professions intermédiaires"), size = 1) + 
   geom_line(aes(y = smbc, color = "SMB Cadres"), size = 1) +
   labs(title = "Pouvoir d'achat du SMIC et du SMB depuis le T4-2019", 
-       subtitle = "Lecture : Au T1-2023, le pouvoir d'achat du Salaire mensuel de base \nrecule de 1,4 % par rapport au T4-2019. \nSource : Dares (SMB), Insee (Smic mensuel brut, IPC) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au T1-2023, le pouvoir d'achat du Salaire mensuel de base recule de 1,4 % par rapport au T4-2019. \nSource : Dares (Salaires de base), Insee (Smic mensuel brut, Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
        y = "Variation par rapport au 2e trimestre 2017 (%)", x = "Date") +
   scale_x_date(limits = as.Date(c("2019-12-01", NA))) + 
   scale_color_manual(values = c("SMB"="blue", "SMB Cadres" = "orange", "SMIC" = "purple", "SMB Employés" ="#00BA38", "SMB Ouvriers" = "#00B8E7", "SMB Professions intermédiaires" = "#D39200"))+
@@ -396,7 +395,7 @@ plot_smic_smb_reel <-ggplot(data = base_sal_reel,
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", size = 14,face = "italic")) + 
   ylim(-5,5)
-
+plot_smic_smb_reel
 
 plot_sal_2019 <- plot_grid(plot_smic_smb_nom_2019, plot_smic_smb_reel, ncol = 2, nrow = 1)
 print(plot_sal_2019)
@@ -415,7 +414,7 @@ plot_smic_smb_nom_2005 <-ggplot(data = historique_sal_smb_smic,
   #geom_line(aes(y = smbc, color = "SMB Cadres"), size = 1) +
   geom_line(aes(y = ipc, color = "IPC"), size = 1.1, linetype = "twodash") +
   labs(title = "SMIC et SMB nominaux depuis 2005", 
-       subtitle = "Lecture : Au T1-2023, le Smic a augmenté de 41 % par rapport au T3-2005, \ncontre 42 % pour le salaire mensuel de base. \nSource : Dares (SMB), Insee (Smic mensuel brut, IPC) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au T1-2023, le Smic a augmenté de X % par rapport au T3-2005, contre X % pour le salaire mensuel de base. \nSource : Dares (Salaires de base), Insee (Smic mensuel brut, Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
        y = "Base 100 au T3-2005", x = "Date") +
   scale_x_date(limits = as.Date(c("2005-09-01", NA))) + 
   scale_color_manual(values = c("SMB"="blue",  "SMIC" = "purple", "IPC"="red")) +
@@ -438,7 +437,7 @@ plot_histo_smb_reel_2005 <-ggplot(data = historique_sal_reel,
   geom_line(aes(y = smbpi, color = "SMB Professions intermédiaires"), size = 1) + 
   geom_line(aes(y = smbc, color = "SMB Cadres"), size = 1) +
   labs(title = "Pouvoir d'achat du Smic et du SMB depuis 2005", 
-       subtitle = "Lecture : Au T1-2023, le pouvoir d'achat du Salaire mensuel de base augmente \nde 8 % par rapport au T3-2005. \nSource : Dares (SMB), Insee (Smic mensuel brut, IPC) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au T1-2023, le pouvoir d'achat du Salaire mensuel de base recule de X % par rapport au T3-2005. \nSource : Dares (Salaires de base), Insee (Smic mensuel brut, Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
        y = "Variation par rapport au T3-2005 (%)", x = "Date") +
   scale_x_date(limits = as.Date(c("2005-09-01", NA))) + 
   scale_color_manual(values = c("SMB"="blue", "SMB Cadres" = "orange", "SMIC" = "purple", "SMB Employés" ="#00BA38", "SMB Ouvriers" = "#00B8E7", "SMB Professions intermédiaires" = "#D39200"))+
@@ -474,17 +473,14 @@ smic_indexation <- left_join(smic_indexation, ipc_q1ht, by = "DATE")
 smic_indexation <- left_join(smic_indexation, ipc_indexation, by = "DATE") 
 smic_indexation <- smic_indexation |>
    mutate(ratio_q1_ipc = ipc_q1ht/ipc)
-```
 
-
-```{r,fig.dim=c(14,9)}
 plot_smic_indexation <-ggplot(data = smic_indexation,
                      aes(x = DATE)) +
   geom_line(aes(y = smic, color = "SMIC mensuel brut"), size = 1.3) + 
   geom_line(aes(y = ipc_q1ht, color = "IPC hors tabac du 1er quintile de niveau de vie"), size = 1.3) + 
   #geom_line(aes(y = ipc, color = "IPC"), size = 1.3, linetype = "twodash") + 
   labs(title = "Indexation du Smic depuis 2020", 
-       subtitle = "Lecture : En mai 2023, le Smic et l'indice des prix du 1er quintile de niveau de vie augmentent de 13 % par rapport à janvier 2020. \nSource : Insee (IPC et Smic mensuel brut) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : En mai 2023, le Smic et l'indice des prix du 1er quintile de niveau de vie augmentent de 13 % par rapport à janvier 2020. \nSource : Institut des Politiques Publiques (Point d'indice), Insee (IPC) \nCalculs et graphiques : @statjunior", 
        y = "Base 100 en janvier 2020", x = "Date") +
   scale_color_manual(values = c("SMIC mensuel brut"="purple", "IPC hors tabac du 1er quintile de niveau de vie" = "#006600"))+
   theme_grey()+
@@ -525,7 +521,7 @@ plot_smpt_smb <-ggplot(data = smpt,
   geom_line(aes(y = smb_reel, color = "SMB réel"), size = 1.3) + 
   #geom_line(aes(y = smb_tertiaire, color = "SMB Tertiaire"), size = 1) + 
   labs(title = "Evolution du pouvoir d'achat du SMB et du Salaire Moyen Par Tête depuis 2017", 
-       subtitle = "Lecture : Au 4e trimestre 2022, le Salaire Moyen Par Tête (SMPT) réel recule de 6 % par rapport au 2e trimestre 2017. \nSource : Dares (Salaires de base), Insee (Comptes nationaux : SMPT et déflateur de la consommation des ménages) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au 4e trimestre 2022, le Salaire Moyen Par Tête (SMPT) réel recule de 5 % par rapport au 2e trimestre 2017. \nSource : Dares (Salaires de base), Insee (Comptes nationaux : SMPT et déflateur de la consommation des ménages) \nCalculs et graphiques : @statjunior", 
        y = "Variation par rapport au T2-2017 (%)", x = "Date") +
   scale_x_date(limits = as.Date(c("2017-04-01", NA))) + 
   scale_color_manual(values = c("SMPT réel" = "red", "SMB réel" = "blue"))+
@@ -559,7 +555,7 @@ fp_smb_nom <-ggplot(data = smb_fp_nom,
   geom_line(aes(y = ipc, color = "IPC"), size = 1.3) + 
   geom_line(aes(y = indice_fp, color = "Point d'indice"), size = 1.3) + 
   labs(title = "Point d'indice de la fonction publique et indice des prix depuis 1985", 
-       subtitle = "Lecture : Au T1-2023, le point d'indice a été multiplié par 1,5 et les prix à la \nconsommation par 2,04 par rapport au T1-1985. \nSource : Institut des Politiques Publiques (Point d'indice), Insee (IPC) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au T1-2023, le point d'indice a été multiplié par 1,5 et les prix à la consommation par 2,04 par rapport au T1-1985. \nSource : Institut des Politiques Publiques (Point d'indice), Insee (IPC) \nCalculs et graphiques : @statjunior", 
        y = "Base 100 au T1-1985", x = "Date") +
   scale_x_date(limits = as.Date(c("1985-03-01", NA))) + 
   scale_color_manual(values = c("Point d'indice"="orange", "IPC" = "#00B8E7"))+
@@ -577,7 +573,7 @@ fp_spb_reel <-ggplot(data = smb_fp_reel,
   #geom_line(aes(y = smbs, color = "SMB réel"), size = 1.3) + 
   geom_line(aes(y = indice_fp, color = "Point d'indice en valeur réelle"), size = 1.3) + 
   labs(title = "Pouvoir d'achat du point d'indice de la fonction publique depuis 1985", 
-       subtitle = "Lecture : Au T1-2023, le pouvoir d'achat du point d'indice de la fonction publique baisse de \n26 % par rapport au T1-1985. \nSource : Institut des Politiques Publiques (Point d'indice), Insee (IPC) \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au T1-2023, le pouvoir d'achat du point d'indice de la fonction publique baisse de 26 % par rapport au T1-1985. \nSource : Institut des Politiques Publiques (Point d'indice), Insee (IPC) \nCalculs et graphiques : @statjunior", 
        y = "Variation par rapport au T1-1985 (%)", x = "Date") +
   scale_x_date(limits = as.Date(c("1985-03-01", NA))) + 
   scale_color_manual(values = c("Point d'indice en valeur réelle"="orange"))+
