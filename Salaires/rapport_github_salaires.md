@@ -47,20 +47,20 @@ publique par rapport aux prix depuis 1985.
 
 ## 2.1 Depuis la crise du Covid (fin 2019)
 
-![](rapport_github_salaires_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](code_github_salaires_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 ## 2.2 Depuis 2005
 
-![](rapport_github_salaires_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](code_github_salaires_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 # 3 Indexation du SMIC depuis 2020
 
-![](rapport_github_salaires_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](code_github_salaires_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 # 4 Comparaison du pouvoir d’achat du SMB et SMPT (Salaire Moyen Par Tête en Comptabilité nationale)
 
-![](rapport_github_salaires_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](code_github_salaires_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 # 5 Evolution du point d’indice de la fonction publique
 
-![](rapport_github_salaires_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](code_github_salaires_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
