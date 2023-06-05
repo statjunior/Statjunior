@@ -48,7 +48,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
-setwd <- setwd("C:/Users/\nSource : Dares (SMB), Insee (Smic mensuel brut, IPC)Documents/GitHub/Statjunior/Salaires/")
+setwd <- setwd("C:/Users/Documents/GitHub/Statjunior/Salaires/")
 
 ###Functions 
 header.true <- function(df) {
