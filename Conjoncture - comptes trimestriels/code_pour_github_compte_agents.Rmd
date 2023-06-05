@@ -3,14 +3,10 @@ title: "Comptes des secteurs institutionnels. Résultats détaillés des Comptes
 author: "@statjunior"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
-  html_document:
-    code_folding: hide
-    fig.retina: 0.5
+  github_document:
     toc: true # table of content true
     toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
     number_sections: true  ## if you want number sections at each table header
-    theme: flatly  # many options for theme, this one is my favorite.
-    highlight: tango  # specifies the syntax highlighting style
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
