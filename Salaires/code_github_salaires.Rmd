@@ -44,7 +44,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
-setwd <- setwd("C:/Users/Documents/GitHub/Statjunior/Salaires/")
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Salaires/")
 
 ###Functions 
 header.true <- function(df) {
@@ -87,24 +87,24 @@ Enfin, on s'intéresse à l'évolution du point d'indice de la fonction publique
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 ###Fichiers à télécharger
 ###SMB Dares : à télécharger tous les trimestres...
-smb <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", 
+smb <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", 
                                                   sheet = "Sal. mens. ensemble", skip = 5)
 
-smbo <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. ouv.", 
+smbo <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. ouv.", 
                    skip = 5)
-smbe <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. emp.", 
+smbe <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. emp.", 
                    skip = 5)
-smbpi <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. PI", 
+smbpi <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. PI", 
                     skip = 5)
-smbc <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. cadres", 
+smbc <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. cadres", 
                    skip = 5)
 
 
-indice_fp <- read_excel("indice_fp.xlsx")|>
+indice_fp <- read_excel("data/indice_fp.xlsx")|>
   rename(OBS_VALUE = cum_fp_1970)
 
-histo_smb <- read_excel("historique_smb_detail.xlsx")
-histo_ipc <- read_excel("ipc_histo.xlsx") |>
+histo_smb <- read_excel("data/historique_smb_detail.xlsx")
+histo_ipc <- read_excel("data/ipc_histo.xlsx") |>
   rename(OBS_VALUE = cum_inf_1990)
 
 ###Smic et IPC insee
@@ -497,9 +497,9 @@ print(plot_smic_indexation)
 
 # Comparaison du pouvoir d'achat du SMB et SMPT (Salaire Moyen Par Tête en Comptabilité nationale)
 ```{r,fig.dim = c(14, 9)}
-setwd <- setwd("C:/Users/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
 smpt <- read_excel("data/smpt.xlsx")
-setwd <- setwd("C:/Users/Documents/GitHub/Statjunior/Salaires/")
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Salaires/")
 
 smbs <- mutate(smbs, DATE = case_when(substr(DATE, 6, 7) == "03"~paste0(substr(DATE, 1, 5),"01",substr(DATE, 8, 10)), 
                                substr(DATE, 6, 7) == "06"~paste0(substr(DATE, 1, 5),"04",substr(DATE, 8, 10)),

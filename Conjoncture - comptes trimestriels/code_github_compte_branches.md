@@ -2,7 +2,7 @@ Comptes de branche. Résultats détaillés des grands indicateurs
 macroéconomique des Comptes Nationaux Trimestriels.
 ================
 @statjunior
-juin 05, 2023
+juin 27, 2023
 
 - <a href="#1-présentation" id="toc-1-présentation">1 Présentation</a>
   - <a href="#11-croissance-du-pib" id="toc-11-croissance-du-pib">1.1
