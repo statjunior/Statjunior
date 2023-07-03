@@ -47,7 +47,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/projets-r-statjunior/decomposition_ipc")
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Inflation")
 getwd()
 ```
 
@@ -154,7 +154,9 @@ analyse_ipc2 <- pivot_longer(analyse_ipc2, cols=c(-1), names_to = "Composante", 
 analyse_ipc2 <- analyse_ipc2 |>
   group_by(Composante) |>
   arrange(DATE) |>
-  mutate(gliss_annuel = value/lag(value, 12)-1)
+  mutate(gliss_annuel = (value/lag(value, 12)-1)*100) |>
+  mutate(gliss_mensuel =(value/lag(value, 1)-1)*100) |>
+  mutate(gliss_mensuel = round(gliss_mensuel, 2))
 ```
 
 
@@ -194,7 +196,8 @@ analyse_ipc2_bis  <- pivot_longer(analyse_ipc2_bis , cols=c(-1), names_to = "Com
 analyse_ipc2_bis  <- analyse_ipc2_bis  |>
   group_by(Composante) |>
   arrange(DATE) |>
-  mutate(gliss_annuel = value/lag(value, 12)-1)
+  mutate(gliss_annuel = value/lag(value, 12)-1) |>
+  mutate(gliss_mensuel =value/lag(value, 1)-1)
 
 analyse_pond2_bis  <- filter (analyse_ipc2_bis , !is.na(gliss_annuel)) |>
   select(DATE, Composante, gliss_annuel) %>% 
@@ -223,7 +226,7 @@ plot_contrib_ipc <-  ggplot(data=gliss_composante_ipc , aes(x=DATE, y= contrib_g
   geom_line(aes(y = gliss_ipc, color =  "IPC")) + geom_point(aes(y = gliss_ipc, color =  "IPC")) +
   geom_line(aes(y = gliss_annuel_isj, color = "Indice sous-jacent"), type = "twodashed") +
   labs(title = "Contribution des postes de consommation au glissement annuel de l'IPC", 
-       subtitle = "Lecture : Au mois de mai 2023, l'alimentation contribue pour 2,3 points au glissement annuel de l'inflation (+5,1 %)  \nSource : Insee \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au mois de juin 2023, l'alimentation contribue pour 2,2 points au glissement annuel de l'inflation (+4,5 %)  \nSource : Insee \nCalculs et graphiques : @statjunior", 
        y = "Pourcentage d'inflation (%)", x = "Mois", fill='Composante') +
   #scale_color_manual(values = c("#333333"))
   theme_grey()+
@@ -248,7 +251,7 @@ print(plot_contrib_ipc)
 plot_ipc2 <- ggplot(data=analyse_ipc2, aes(x=DATE, y=value, fill = Composante)) +
   geom_line(aes(col = Composante), size =1.1)  +
   labs(title = "Evolution des composantes de l'inflation depuis juin 2021", 
-      subtitle = "Lecture : Au mois de mai 2023, les prix alimentaires ont augmenté de 24 % par rapport à juin 2021. \nSource : Insee (Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
+      subtitle = "Lecture : Au mois de juin 2023, les prix alimentaires ont augmenté de 20 % par rapport à juin 2021. \nSource : Insee (Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
       y = "Base 100 en juin 2021", x = "Mois") +
   scale_color_manual(values = c("red", "#C77CFF", "blue", "#00BA38",  "orange",  "#D39200"))+
   geom_line(data = filter(analyse_ipc2, Composante == "Ensemble"), size = 1.5, color = "blue") +

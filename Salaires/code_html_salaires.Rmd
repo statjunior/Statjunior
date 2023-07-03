@@ -89,24 +89,24 @@ Enfin, on s'intéresse à l'évolution du point d'indice de la fonction publique
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 ###Fichiers à télécharger
 ###SMB Dares : à télécharger tous les trimestres...
-smb <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", 
+smb <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", 
                                                   sheet = "Sal. mens. ensemble", skip = 5)
 
-smbo <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. ouv.", 
+smbo <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. ouv.", 
                    skip = 5)
-smbe <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. emp.", 
+smbe <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. emp.", 
                    skip = 5)
-smbpi <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. PI", 
+smbpi <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. PI", 
                     skip = 5)
-smbc <- read_excel("Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. cadres", 
+smbc <- read_excel("data/Dares_serie_salaire_de_base_t4_2022.xlsx", sheet ="Sal. mens. cadres", 
                    skip = 5)
 
 
-indice_fp <- read_excel("indice_fp.xlsx")|>
+indice_fp <- read_excel("data/indice_fp.xlsx")|>
   rename(OBS_VALUE = cum_fp_1970)
 
-histo_smb <- read_excel("historique_smb_detail.xlsx")
-histo_ipc <- read_excel("ipc_histo.xlsx") |>
+histo_smb <- read_excel("data/historique_smb_detail.xlsx")
+histo_ipc <- read_excel("data/ipc_histo.xlsx") |>
   rename(OBS_VALUE = cum_inf_1990)
 
 ###Smic et IPC insee
@@ -344,11 +344,40 @@ historique_sal_reel <- mutate_at(historique_sal_smb_smic , vars(2:10),  ~./ipc*1
 
 # Salaire mensuel de base et Smic 
 ## Depuis la crise du Covid (fin 2019)
+### En glissement annuel
 ```{r,fig.dim = c(14, 9)}
 #On redéfinit en base 100 au T4-2019 
 base_salaires_nom<- mutate_at(base_salaires, vars(2:11), scale_2019t4)
 base_sal_reel <- mutate_at(base_salaires_nom, vars(2:10),  ~./ipc*100-100)
 
+base_salaires_nom <- base_salaires_nom |>
+  arrange(DATE) |>
+  mutate(gliss_ipc = (ipc/lag(ipc,4)-1)*100) |>
+  mutate(gliss_smic = (smic/lag(smic,4)-1)*100)|>
+  mutate(gliss_smb = (smbs/lag(smbs,4)-1)*100)
+
+plot_gliss_smic_smb_nom_2019 <-ggplot(data = base_salaires_nom,
+                            aes(x = DATE)) +
+  #geom_line(aes(y = gliss_smic, color = "SMIC"), size = 1.3) + 
+  geom_line(aes(y = gliss_smb, color = "SMB"), size = 1.3) + 
+  geom_line(aes(y = gliss_ipc, color = "IPC"), size = 1.1) +
+  labs(title = "SMIC et SMB nominaux depuis le T4-2019 en glissement annuel", 
+       subtitle = "Lecture : Au T1-2023, la hausse du Salaire mensuel de base (SMB) sur un an est de 4,6 % contre 6,1 % d'inflation. \nSource : Dares (Salaires de base), Insee (Smic mensuel brut, Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
+       y = "Glissement annuel (%)", x = "Date") +
+  scale_x_date(limits = as.Date(c("2019-12-01", NA))) + 
+  scale_color_manual(values = c("SMB"="blue",  "IPC"="red")) +
+  #"SMB Cadres" = "orange","SMB Employés" ="#00BA38", "SMB Ouvriers" =        #"#00B8E7", "SMB Professions intermédiaires" = "#D39200"+
+  theme_grey()+
+  theme(legend.position="bottom",
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=14),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", size = 14, face = "italic")) + 
+  ylim(-2,8)
+print(plot_gliss_smic_smb_nom_2019)
+```
+### En niveau (nominal et pouvoir d'achat des salaires)
+``````{r,fig.dim = c(14, 9)}
 #Graphique évolution nominale 
 plot_smic_smb_nom_2019 <-ggplot(data = base_salaires_nom,
                             aes(x = DATE)) +

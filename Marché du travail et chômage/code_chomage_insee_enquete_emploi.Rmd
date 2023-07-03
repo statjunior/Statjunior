@@ -37,6 +37,7 @@ library(lubridate)
 library(conflicted)
 library(base)
 library(tidyr)
+library(plotly)
 conflict_prefer("rename", "dplyr")
 conflict_prefer("filter", "dplyr")
 conflict_prefer("mutate", "dplyr")
@@ -46,9 +47,10 @@ conflict_prefer("lag", "dplyr")
 conflict_prefer("summarise", "dplyr")
 conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
+conflict_prefer("layout", "plotly")
 
 
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/projets-r-statjunior/chomage_bit")
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Marché du travail et chômage/")
 
 ```
 
@@ -61,7 +63,7 @@ Le rapport détaille les différentes catégories de contraintes d'emploi exprim
 Le rapport présente à la fois les résultats en taux et en valeur absolue (nombre de personnes concernées)
 
 
-```{r}
+```{r,echo=FALSE, message=FALSE, results='hide'}
 insee_dataset = get_dataset_list() 
 
 get_chom_bit = 
@@ -102,7 +104,9 @@ plot_chom_bit_duree <-  ggplot(data=p_chom_bit, aes(x=DATE, y= OBS_VALUE)) +
         legend.title = element_text(size=12), 
         legend.text = element_text(size=12)
   ) 
-print(plot_chom_bit_duree)
+plot_chom_bit_duree2 <- ggplotly(plot_chom_bit_duree, height = 600, width = 1000)
+plot_chom_bit_duree2 <-layout(plot_chom_bit_duree2, legend = list(orientation = "h", y = -0.2))
+plot_chom_bit_duree2
 ```
 
 ## Taux de chômage BIT par tranche d'âge
@@ -121,13 +125,16 @@ plot_chom_bit_age <-  ggplot(data=p_chom_age, aes(x=DATE, y= OBS_VALUE)) +
         legend.title = element_text(size=12), 
         legend.text = element_text(size=12)
   ) 
-print(plot_chom_bit_age)
+
+plot_chom_bit_age2 <- ggplotly(plot_chom_bit_age, height = 600, width = 1000)
+plot_chom_bit_age2 <-layout(plot_chom_bit_age2, legend = list(orientation = "h", y = -0.2))
+plot_chom_bit_age2
 ```
 
 
 ## Taux de chômage élargi (BIT + halo du chômage + sous-emploi involontaire)
 ### En proportion des participants au marché du travail 
-```{r, fig.dim = c(14, 9)}
+```{r,echo=FALSE, message=FALSE, results='hide'}
 get_elargi = 
   get_idbank_list("CHOMAGE-TRIM-NATIONAL") %>% 
   filter(NATURE == "PROPORTION") 
@@ -140,8 +147,10 @@ chom_elargi =
   filter(OBS_STATUS == "A") %>% 
   select(DATE, TIME_PERIOD, OBS_VALUE, TITLE_FR1, TITLE_FR2, TITLE_FR3, TITLE_FR4, TITLE_FR5) %>% 
   filter(TITLE_FR3 == "France hors Mayotte")
+```
 
 
+```{r, fig.dim = c(14, 9)}
 p_chom_elargi <- filter(chom_elargi, TITLE_FR1 == "Part des chômeurs parmi les participants au marché du travail (emploi, chômage, halo)" | 
                        TITLE_FR1 == "Part des personnes au chômage ou dans le halo parmi les participants (emploi, chômage, halo) au marché du travail" | 
                        TITLE_FR1 ==  "Part des personnes contraintes sur leur offre de travail (halo, chômage, sous-emploi) parmi les participants au marché du travail (emploi, chômage, halo)") |>
@@ -165,8 +174,10 @@ plot_chom_elargi <-  ggplot(data=p_chom_elargi, aes(x=DATE, y= OBS_VALUE)) +
         legend.title = element_text(size=12), 
         legend.text = element_text(size=12)
   ) 
-print(plot_chom_elargi)
+plot_chom_elargi2 <- ggplotly(plot_chom_elargi, height = 600, width = 1000)
+plot_chom_elargi2 <-layout(plot_chom_elargi2, legend = list(orientation = "h", y = -0.2))
 
+plot_chom_elargi2
 ```
 
 
@@ -198,13 +209,16 @@ plot_alo_age <-  ggplot(data=p_alo_age, aes(x=DATE, y= OBS_VALUE)) +
         legend.title = element_text(size=12), 
         legend.text = element_text(size=12)
   ) 
-print(plot_alo_age)
+plot_alo_age2 <- ggplotly(plot_alo_age, height = 600, width = 1000)
+plot_alo_age2 <-layout(plot_alo_age2, legend = list(orientation = "h", y = -0.2))
+
+plot_alo_age2
 ```
 
 # Nombre de personnes au chômage ou ayant des contraintes d'emploi (halo, sous-emploi)
 
 ## Nombre de personnes au chomage BIT ou dans le halo 
-```{r, fig.dim = c(14, 9)}
+```{r,echo=FALSE, message=FALSE, results='hide'}
 get_personnes_elargi = 
   get_idbank_list("CHOMAGE-TRIM-NATIONAL") %>% 
   filter(NATURE == "VALEUR_ABSOLUE") 
@@ -226,7 +240,10 @@ chom_personnes =
   mutate(age = ifelse(is.na(age), "Ensemble", age)) |>
   mutate(sexe = ifelse(is.na(sexe), "Ensemble", sexe)) |>
   mutate(OBS_VALUE = OBS_VALUE / 1000)
+```
 
+
+```{r, fig.dim = c(14, 9)}
 decompo_chomage <-filter(chom_personnes,TITLE_FR2 == "Inactifs disponibles mais ne faisant pas de démarche active de recherche d'emploi (en milliers)" | 
                            TITLE_FR2 =="Inactifs faisant des démarches actives de recherche d'emploi mais non disponibles (en milliers)" | 
                            TITLE_FR2 == "Inactifs souhaitant travailler mais non disponibles et ne faisant pas de démarche active de recherche d'emploi (en milliers)" |
@@ -267,7 +284,11 @@ plot_personnes_chomage_halo <-  ggplot(data=decompo_chomage, aes(x=DATE, y= OBS_
   scale_x_date(limits = as.Date(c("2003-01-01", NA)))  + 
   guides(fill=guide_legend(nrow=2,byrow=TRUE))
 
-print(plot_personnes_chomage_halo)
+
+plot_personnes_chomage_halo2 <- ggplotly(plot_personnes_chomage_halo, height = 600, width = 1000)
+plot_personnes_chomage_halo2 <-layout(plot_personnes_chomage_halo2, legend = list(orientation = "h", y = -0.2))
+
+plot_personnes_chomage_halo2
 ```
 
 ## Part des personnes comptées comme chômeurs BIT parmi les chômeurs semi-élargis (BIT + halo du chomage)
@@ -292,7 +313,10 @@ plot_part_chomage_halo <-  ggplot(data=decompo_chomage, aes(x=DATE, y= OBS_VALUE
   scale_x_date(limits = as.Date(c("2003-01-01", NA))) + 
   guides(fill=guide_legend(nrow=2,byrow=TRUE))
 
-print(plot_part_chomage_halo)
+plot_part_chomage_halo2 <- ggplotly(plot_part_chomage_halo, height = 600, width = 1000)
+plot_part_chomage_halo2 <-layout(plot_part_chomage_halo2, legend = list(orientation = "h", y = -0.2))
+
+plot_part_chomage_halo2
 ```
 
 
@@ -323,18 +347,24 @@ plot_personnes_halo <-  ggplot(data=decompo_halo, aes(x=DATE, y= OBS_VALUE, fill
   scale_x_date(limits = as.Date(c("2003-01-01", NA)))  + 
   guides(fill=guide_legend(nrow=2,byrow=TRUE))
 
-print(plot_personnes_halo)
+plot_personnes_halo2 <- ggplotly(plot_personnes_halo, height = 600, width = 1000)
+plot_personnes_halo2 <-layout(plot_personnes_halo2, legend = list(orientation = "h", y = -0.2))
+
+plot_personnes_halo2
 ```
 
 
 ## Nombre de personnes en sous-emploi
 
-```{r, fig.dim = c(14, 9)}
+```{r,echo=FALSE, message=FALSE, results='hide'}
 nb_ssemploi <- get_insee_idbank("010605873","010605872","010605871") %>% 
   split_title() %>% 
   filter(OBS_STATUS == "A") |>
   mutate(OBS_VALUE = OBS_VALUE/1000)
+```
 
+
+```{r, fig.dim = c(14, 9)}
 nb_ssemploi <- nb_ssemploi |>
   mutate(TITLE_FR2== as.character(TITLE_FR2)) |>
   mutate(title = ifelse(TITLE_FR2 =="Temps partiel, souhaitant travailler plus d'heures, disponible pour le faire et à la recherche d'un autre emploi (en milliers)", "Sous emploi: souhaite travailler davantage, disponible ET en recherche", NA_real_)) |>
@@ -364,7 +394,10 @@ plot_personnes_ssemploi <-  ggplot(data=nb_ssemploi, aes(x=DATE,
   scale_x_date(limits = as.Date(c("2003-01-01", NA)))  + 
   guides(fill=guide_legend(nrow=2,byrow=TRUE))
 
-print(plot_personnes_ssemploi)
+plot_personnes_ssemploi2 <- ggplotly(plot_personnes_ssemploi, height = 600, width = 1000)
+plot_personnes_ssemploi2 <-layout(plot_personnes_ssemploi2, legend = list(orientation = "h", y = -0.2))
+
+plot_personnes_ssemploi2
 ```
 
 ## Nombre total de personnes exprimant des contraintes d'emploi : chômeurs BIT, halo du chomage et sous-emploi 
@@ -401,7 +434,10 @@ plot_full_personnes_besoin_emploi <-  ggplot(data=decompo_full, aes(x=DATE, y= O
   scale_fill_manual(values = c("#FFCC00", "orange", "#993000","#99CCFF", "#00B8E7", "#3333FF","#CC00CC")) +
   guides(fill=guide_legend(nrow=4,byrow=TRUE))
 
-print(plot_full_personnes_besoin_emploi)
+plot_full_personnes_besoin_emploi2 <- ggplotly(plot_full_personnes_besoin_emploi, height = 600, width = 1000)
+plot_full_personnes_besoin_emploi2 <-layout(plot_full_personnes_besoin_emploi2, legend = list(orientation = "h", y = -0.2))
+
+plot_full_personnes_besoin_emploi2
 
 ```
 
