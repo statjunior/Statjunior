@@ -100,8 +100,8 @@ Le rapport présente à la fois les résultats en taux et en valeur absolue
 
 ## 3.4 Nombre de personnes en sous-emploi
 
-![](Rapport_github_chomage_enquete_emploi_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](Rapport_github_chomage_enquete_emploi_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ## 3.5 Nombre total de personnes exprimant des contraintes d’emploi : chômeurs BIT, halo du chomage et sous-emploi
 
-![](Rapport_github_chomage_enquete_emploi_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](Rapport_github_chomage_enquete_emploi_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->

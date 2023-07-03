@@ -46,7 +46,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Marché du travail et chômage/")
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Marché du travail et chômage/Chômage BIT, halo et sous emploi - Enquête Emploi/")
 
 ```
 
@@ -350,7 +350,10 @@ nb_ssemploi <- nb_ssemploi |>
 nb_ssemploi <- select(nb_ssemploi, DATE, OBS_VALUE, title) |>
   group_by(DATE) |>
   mutate(total_ssemploi = sum(OBS_VALUE))
+```
 
+
+```{r, fig.dim = c(14, 9)}
 plot_personnes_ssemploi <-  ggplot(data=nb_ssemploi, aes(x=DATE, 
                                                          y= OBS_VALUE, 
                                                          fill = forcats::fct_relevel(title, c("Sous emploi: ayant involontairement travaillé moins que d'habitude", "Sous emploi: souhaite travailler davantage, disponible MAIS sans recherche", "Sous emploi: souhaite travailler davantage, disponible ET en recherche")))) +
