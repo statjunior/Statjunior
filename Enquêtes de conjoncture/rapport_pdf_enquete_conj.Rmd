@@ -73,7 +73,7 @@ Enfin, on analyse plus spécifiquement les difficultés de production présentes
 
 Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format(Sys.time(), '%d %B %Y à %H heures et %M minutes')`. Les potentielles erreurs présentes dans ce document relèvent uniquement de la responsabilité de Statjunior.
 
-Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/Enquêtes de conjoncture/).  
+Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Enqu%C3%AAtes%20de%20conjoncture/).  
 
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
