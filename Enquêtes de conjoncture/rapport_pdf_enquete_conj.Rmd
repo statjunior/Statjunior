@@ -1,0 +1,489 @@
+---
+title: "Enquêtes de conjoncture auprès des entreprises"
+subtitle: "Résultats au mois de juillet 2023"
+author: "@statjunior"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    template: eisvogel.tex
+    keep_tex: true
+titlepage: true
+titlepage-color: "884373"
+titlepage-text-color: "FFFFFF"
+disable-header-and-footer: true
+logo: "logo.pdf"
+logo-width: 0
+lang: fr-FR
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+list(rm=ls())
+library(insee)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(readxl) 
+library(writexl)
+library(tsibble)
+library(tibble)
+library(janitor)
+library(tsbox)
+library(knitr)
+library(tempdisagg)
+library(labelled)
+library(stringr)
+library(Hmisc)
+library(hrbrthemes)
+library(lubridate)
+library(conflicted)
+library(base)
+library(tidyr)
+library(cowplot)
+library(plotly)
+
+conflict_prefer("rename", "dplyr")
+conflict_prefer("filter", "dplyr")
+conflict_prefer("mutate", "dplyr")
+conflict_prefer("arrange", "dplyr")
+conflict_prefer("replace", "dplyr")
+conflict_prefer("lag", "dplyr")
+conflict_prefer("summarise", "dplyr")
+conflict_prefer("relocate", "dplyr")
+conflict_prefer("select", "dplyr")
+
+###Paramètres à fixer 
+point_max <- "2023-07-01"
+point_max_litt <- "juillet 2023"
+
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Enquêtes de conjoncture/")
+```
+
+# Présentation
+Ce rapport *RMarkdown* présente les résultats des enquêtes de conjoncture auprès des entreprises réalisées par l'Insee. Le dernier point connu est `r point_max_litt`. 
+
+On présente tout d'abord l'indicateur synthétique du climat des affaires ainsi que celui de l'emploi pour tous les secteurs de l'économie. Cet indicateur est de moyenne 100 sur longue période (et d'écart-type 10). 
+
+On s'intéresse ensuite au climat des affaires par secteur d'activité (bâtiment, industrie manufacturière, commerce de détail, services). On présente également les évolutions de prix et d'emploi prévues par les chefs d'entreprise de chaque secteur, à un horizon de court-terme. 
+
+Enfin, on analyse plus spécifiquement les difficultés de production présentes dans l'industrie manufacturière, en distinguant les contraintes d'offre des contraintes de demande. 
+
+Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format(Sys.time(), '%d %B %Y à %H heures et %M minutes')`. Les potentielles erreurs présentes dans ce document relèvent uniquement de la responsabilité de Statjunior.
+
+Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/Enquêtes de conjoncture/).  
+
+
+```{r, echo=FALSE, message=FALSE, results='hide'}
+###Tous secteurs 
+list_conj_climat_affaires =
+  get_idbank_list("CLIMAT-AFFAIRES") 
+
+conj_climat_affaires = list_conj_climat_affaires %>% pull(idbank)
+
+eq_conj_climat_affaires = 
+  get_insee_idbank(conj_climat_affaires) %>% 
+  split_title() %>% 
+  select(DATE, OBS_VALUE, TITLE_FR1, TITLE_FR2)
+
+climat_all_emploi_affaires <- filter(eq_conj_climat_affaires, TITLE_FR1 !="Indicateur de retournement conjoncturel")
+climat_all_emploi_affaires <- climat_all_emploi_affaires |>
+  group_by(TITLE_FR1) |>
+  arrange(DATE) |>
+  mutate(var_mensuelle = ((OBS_VALUE-lag(OBS_VALUE,1))/lag(OBS_VALUE,1)*100)) |>
+  ungroup() |>
+  mutate(conj = ifelse(var_mensuelle > 2, "s'améliore",
+                       ifelse(var_mensuelle < -2, "s'assombrit", "reste stable")))
+
+climat_all_retournement <- filter(eq_conj_climat_affaires, TITLE_FR1 =="Indicateur de retournement conjoncturel")
+```
+
+
+# Climat conjoncturel global 
+## Climat des affaires et de l'emploi
+```{r,fig.dim = c(14, 9)}
+###Climat global des affaires et de l'emploi
+plot_climat_conj_ts_secteurs <-ggplot(data = climat_all_emploi_affaires,
+                                    aes(x = DATE, y = OBS_VALUE, fill = forcats::fct_relevel(TITLE_FR1, c("Indicateur du climat des affaires", "Indicateur du climat de l'emploi"), after = 1)))+
+  geom_ribbon(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-01"),fill="Récession"))+
+  geom_ribbon(aes(xmin = as.Date("2019-10-01"), xmax = as.Date("2020-06-01"),fill="Récession"))+
+  geom_line(aes(col = TITLE_FR1), size =1.1) +
+  geom_hline(yintercept=100, linetype="dashed", color = "black")+
+  labs(title = "Climat des affaires et de l'emploi - Tous secteurs", 
+       subtitle = paste("Lecture : En", point_max_litt, ", le climat des affaires est de", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat des affaires") %>% pull(OBS_VALUE),
+                        "et le climat de l'emploi est de", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat de l'emploi") %>% pull(OBS_VALUE)
+, "(la moyenne de longue période est de 100). \nLecture : Par rapport au mois précédent, le climat des affaires", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat des affaires") %>% pull(conj), ", celui de l'emploi",valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat de l'emploi") %>% pull(conj), ".\nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       y = "Normalisé de moyenne 100 et écart-type 10", x = "Date") +
+  scale_color_manual(values = c("orange", "#00B8E7")) + 
+  scale_fill_manual(name = '',  values=c("Récession" = "grey60"))+
+  theme_ipsum( plot_margin = margin(0,0,0,0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=7), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) +
+  scale_x_date(limits = as.Date(c("2000-01-01", point_max)))  
+print(plot_climat_conj_ts_secteurs)
+```
+
+
+## Indicateur de retournement conjoncturel
+```{r,fig.dim = c(14, 9)}
+###Indicateur global de retournement conjoncturel
+valeur <- climat_all_retournement %>%  filter(DATE == max(DATE)) %>% pull(OBS_VALUE)
+if (valeur>0.5){
+  valeur2 <- "une accélération"
+} else if (valeur>=-0.5 & valeur <0.5){
+  valeur2 <- "une stabilité"
+}else {
+  valeur2 <- "un ralentissement"
+}
+
+plot_ind_retournement_conjoncturel <-ggplot(data = climat_all_retournement,
+                                      aes(x = DATE, y = OBS_VALUE))+
+  geom_ribbon(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-01"), fill="Récession"))+
+  geom_ribbon(aes(xmin = as.Date("2019-10-01"), xmax = as.Date("2020-06-01"), fill="Récession"))+
+  geom_line(size =1.05, color ="#F8766D") +
+  geom_hline(yintercept=0, linetype="dashed", color = "black")+
+  scale_fill_manual(name = '',  values=c("Récession" = "grey60"))+
+  labs(title = "Indicateur de retournement conjoncturel", 
+       subtitle = paste("Lecture : En", point_max_litt, ", l'indicateur de retournement conjoncturel est de", valeur,", suggérant", valeur2,  "de l'activité économique. \nSource : Insee (Enquêtes de conjoncture - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       y = "Ralentissement / Stabilité / Accélération", x = "Date") +
+  theme_ipsum( plot_margin = margin(0,0,0,0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=7), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) +
+  scale_x_date(limits = as.Date(c("2000-01-01", point_max))) 
+print(plot_ind_retournement_conjoncturel)
+```
+
+
+```{r, echo=FALSE, message=FALSE, results='hide'}
+#######Enquetes sectorielles
+#Industrie manufacturière
+list_conj_ind_manuf =
+  get_idbank_list("ENQ-CONJ-ACT-IND") %>% 
+  filter(substr(NAF2_label_fr,1,6) =='A10-CZ') %>% 
+  filter(FREQ_label_fr == "Mensuelle")
+
+conj_ind_manuf = list_conj_ind_manuf %>% pull(idbank)
+
+eq_conj_ind_manuf = 
+  get_insee_idbank(conj_ind_manuf) %>% 
+  split_title() %>% 
+  filter(TITLE_FR4 =="Série CVS") %>%
+  filter(TITLE_FR3 == "Indicateur synthétique du climat des affaires" |
+          TITLE_FR3 == "Tendance prévue de la production (solde d'opinion)" |
+          TITLE_FR3 == "Évolution probable des prix de vente (solde d'opinion)" |
+          TITLE_FR3 == "Niveau des carnets de commandes globaux (solde d'opinion)" | 
+           TITLE_FR2 == "Tendance d'évolution prévue des effectifs" ) %>% 
+  mutate(TITLE_FR3 = ifelse(TITLE_FR3 == "Industrie manufacturière", TITLE_FR2, TITLE_FR3)) %>% 
+  select(DATE, OBS_VALUE, TITLE_FR3) %>% 
+  filter(DATE >=as.Date("2000-01-01")) %>% 
+  mutate(cat = "Industrie manufacturière") %>% 
+  rename(TITLE_FR2 = TITLE_FR3)
+
+difficultes_indus <- get_insee_idbank(conj_ind_manuf) %>% 
+  split_title() %>% 
+  filter(TITLE_FR4 == "Série CVS") %>% 
+  filter(TITLE_FR3 =="Entreprises recevant une demande insuffisante (pourcentage d'entreprises concernées)" |
+  TITLE_FR3 =="Entreprises subissant des difficultés d'approvisionnements (pourcentage d'entreprises concernées)"|
+  TITLE_FR2 =="Activité limitée par l'insuffisance de personnel"|
+  TITLE_FR3 =="Entreprises subissant des difficultés d'équipements (pourcentage d'entreprises concernées)"|
+  TITLE_FR2 =="Activité limitée par des contraintes financières") |>
+  mutate(TITLE_FR3 = ifelse(TITLE_FR3 == "Industrie manufacturière", TITLE_FR2, TITLE_FR3)) |>
+  select(DATE, OBS_VALUE, TITLE_FR3) %>% 
+  filter(DATE >=as.Date("2000-01-01")) %>% 
+  mutate(cat = "Industrie manufacturière") %>% 
+  rename(TITLE_FR2 = TITLE_FR3) %>% 
+  mutate(TITLE_FR2 = case_when(
+    TITLE_FR2 =="Entreprises recevant une demande insuffisante (pourcentage d'entreprises concernées)"~"Demande insuffisante", 
+    TITLE_FR2 =="Entreprises subissant des difficultés d'approvisionnements (pourcentage d'entreprises concernées)"~"Difficultés d'approvisionnement",
+    TITLE_FR2 =="Activité limitée par l'insuffisance de personnel"~"Insuffisance de personnel",
+    TITLE_FR2 =="Entreprises subissant des difficultés d'équipements (pourcentage d'entreprises concernées)"~"Difficultés d'équipement",
+    TITLE_FR2 =="Activité limitée par des contraintes financières"~"Contraintes financières"
+  ))
+
+difficultes_indus <- difficultes_indus |>
+  group_by(TITLE_FR2) |>
+  arrange(DATE) |>
+  mutate(var_mensuelle = ((OBS_VALUE-lag(OBS_VALUE,1))/lag(OBS_VALUE,1)*100)) |>
+  ungroup() |>
+  mutate(conj = ifelse(var_mensuelle > 2, "en hausse",
+                       ifelse(var_mensuelle < -2, "en baisse", "un niveau stable")))
+
+###Enquete dans l'industrie du batiment
+list_conj_ind_bat =
+  get_idbank_list("ENQ-CONJ-IND-BAT") %>% 
+  filter(INDICATEUR_label_fr =="Indicateur synthétique du climat des affaires" | 
+           INDICATEUR_label_fr =="Tendance prévue des prix"|
+           INDICATEUR_label_fr =="Tendance d'évolution prévue des effectifs"|
+           INDICATEUR_label_fr =="Activité prévue"|
+           INDICATEUR_label_fr =="Jugement sur le niveau du carnet de commande") |>
+  filter(FREQ_label_fr=="Mensuelle") |>
+  filter(ACTIVITE_ECB_label_fr == "Ensemble" | ACTIVITE_ECB_label_fr == "Sans objet" | ACTIVITE_ECB_label_fr =="Bâtiment")|>
+  filter(CORRECTION_label_fr == "Corrigé des variations saisonnières")
+  
+conj_ind_bat = list_conj_ind_bat %>% pull(idbank)
+
+eq_conj_ind_bat =
+  get_insee_idbank(conj_ind_bat) %>%
+  split_title() %>%
+  filter(TITLE_FR3 =="Ensemble" | TITLE_FR3 == "Série CVS") %>% 
+  select(DATE, OBS_VALUE,TITLE_FR2) |>
+  mutate(cat="Bâtiment")
+
+##########Enquete dans le secteur du commerce
+list_conj_commerce =
+  get_idbank_list("ENQ-CONJ-COM-DET") %>% 
+  filter(FREQ_label_fr == "Mensuelle") %>% 
+  filter(ACTIVITE_ECCD_label_fr =="Commerce et réparation automobiles (depuis février 2003)" |
+          ACTIVITE_ECCD_label_fr =="Commerce de détail")
+conj_commerce = list_conj_commerce %>% pull(idbank)
+
+eq_conj_commerce = 
+  get_insee_idbank(conj_commerce) %>% 
+  split_title() %>% 
+  filter(TITLE_FR3 == "Tous secteurs du commerce et réparation automobiles (depuis février 2003)" | TITLE_FR3 == "Série CVS") %>% 
+  filter(TITLE_FR4 =="Série CVS" | TITLE_FR3 == "Série CVS") %>% 
+  filter(TITLE_FR2 == "Évolution des effectifs au cours des 3 prochains mois" |
+           TITLE_FR2 == "Indicateur synthétique du climat des affaires" | 
+           TITLE_FR2 =="Évolution probable des prix de vente au cours des 3 prochains mois" |
+           TITLE_FR2 == "Évolution des affaires dans le commerce au cours des 3 prochains mois" | 
+           TITLE_FR2 == "Intentions de commandes pour les 3 prochains mois") %>% 
+  select(DATE, OBS_VALUE, TITLE_FR2) |>
+  filter(DATE >=as.Date("2005-01-01")) |>
+  mutate(cat = "Commerce")
+
+####Enquete dans les services
+list_conj_service =
+  get_idbank_list("ENQ-CONJ-SERV")  |>
+  filter(ACTIVITE_EC_label_fr =="Ensemble des services")
+
+conj_service = list_conj_service %>% pull(idbank)
+
+eq_conj_service = 
+  get_insee_idbank(conj_service, limit = FALSE) %>% 
+  split_title() %>% 
+  filter(TITLE_FR4 =="Série CVS" | is.na(TITLE_FR4)) %>% 
+  select(DATE, OBS_VALUE, TITLE_FR2) %>% 
+  filter(TITLE_FR2 =="Indicateur synthétique du climat des affaires dans les services" |
+          TITLE_FR2 == "Tendance prévue des effectifs" |
+           TITLE_FR2 =="Tendance prévue des prix" |
+           TITLE_FR2 == "Tendance prévue de l'activité") %>% 
+  filter(DATE >=as.Date("2005-01-01")) |>
+  mutate(cat = "Services")
+
+
+
+
+###Global indicateur synthétique climat des affaires par secteur 
+climat_service <- filter(eq_conj_service, TITLE_FR2 =="Indicateur synthétique du climat des affaires dans les services")
+climat_bat <- filter(eq_conj_ind_bat, TITLE_FR2 =="Indicateur synthétique du climat des affaires")
+climat_com <- filter(eq_conj_commerce, TITLE_FR2 =="Indicateur synthétique du climat des affaires")
+climat_indus <- filter(eq_conj_ind_manuf, TITLE_FR2 =="Indicateur synthétique du climat des affaires")
+
+prix_service <- filter(eq_conj_service, TITLE_FR2 =="Tendance prévue des prix")
+prix_bat <- filter(eq_conj_ind_bat, TITLE_FR2 =="Tendance prévue des prix")
+prix_com <- filter(eq_conj_commerce, TITLE_FR2 =="Évolution probable des prix de vente au cours des 3 prochains mois")
+prix_indus <- filter(eq_conj_ind_manuf, TITLE_FR2 =="Évolution probable des prix de vente (solde d'opinion)")
+
+emploi_service <- filter(eq_conj_service, TITLE_FR2 =="Tendance prévue des effectifs")
+emploi_bat <- filter(eq_conj_ind_bat, TITLE_FR2 =="Tendance d'évolution prévue des effectifs")
+emploi_com <- filter(eq_conj_commerce, TITLE_FR2 =="Évolution des effectifs au cours des 3 prochains mois")
+emploi_indus <- filter(eq_conj_ind_manuf, TITLE_FR2 =="Tendance d'évolution prévue des effectifs")
+
+global_climat <- rbind(climat_service, climat_bat, climat_com, climat_indus)
+global_climat <- global_climat |>
+  group_by(cat) |>
+  arrange(DATE) |>
+  mutate(var_mensuelle = ((OBS_VALUE-lag(OBS_VALUE,1))/lag(OBS_VALUE,1)*100)) |>
+  ungroup() |>
+  mutate(conj = ifelse(var_mensuelle > 2, "en hausse",
+                       ifelse(var_mensuelle < -2, "en baisse", "un niveau stable")))
+
+global_prix <- rbind(prix_service, prix_bat, prix_com, prix_indus)
+global_prix <- global_prix  |>
+  group_by(cat) |>
+  arrange(DATE) |>
+  mutate(var_mensuelle = ((OBS_VALUE-lag(OBS_VALUE,1))/lag(OBS_VALUE,1)*100)) |>
+  ungroup() |>
+  mutate(conj = ifelse(var_mensuelle > 2, "en hausse",
+                       ifelse(var_mensuelle < -2, "en baisse", "un niveau stable")))
+
+global_emploi <- rbind(emploi_service, emploi_bat, emploi_com, emploi_indus)
+global_emploi <- global_emploi |>
+  group_by(cat) |>
+  arrange(DATE) |>
+  mutate(var_mensuelle = ((OBS_VALUE-lag(OBS_VALUE,1))/lag(OBS_VALUE,1)*100)) |>
+  ungroup() |>
+  mutate(conj = ifelse(var_mensuelle > 2, "en hausse",
+                       ifelse(var_mensuelle < -2, "en baisse", "un niveau stable")))
+```
+
+
+# Climat conjoncturel sectoriel
+## Climat des affaires par secteur
+```{r,fig.dim = c(14, 9)}
+###Climat par secteur 
+plot_climat_par_secteur <-ggplot(data = global_climat,
+                                      aes(x = DATE, y = OBS_VALUE, fill = forcats::fct_relevel(cat, c("Bâtiment", "Industrie manufacturière", "Commerce", "Services"), after = 1)))+
+  geom_ribbon(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-01"),fill="Récession"))+
+  geom_ribbon(aes(xmin = as.Date("2019-10-01"), xmax = as.Date("2020-06-01"),fill="Récession"))+
+  geom_line(aes(col = cat), size =1.1) +
+  geom_hline(yintercept=100, linetype="dashed", color = "black")+
+  labs(title = "Climat des affaires par secteur", 
+       subtitle = paste("Lecture : En", point_max_litt, ", le climat des affaires dans l'industrie manuafacturière est de", valeur <- global_climat %>% filter(DATE == max(DATE), cat == "Industrie manufacturière") %>% pull(OBS_VALUE),
+                        ",", valeur <- global_climat %>% filter(DATE == max(DATE), cat == "Industrie manufacturière") %>% pull(conj), " par rapport au mois précédent. \nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       y = "Normalisé de moyenne 100 et écart-type 10", x = "Date") +
+  scale_color_manual(values = c("#F8766D", "#C77CFF", "#00B8E7", "orange")) + 
+  scale_fill_manual(name = '',  values=c("Récession" = "grey60"))+
+  theme_ipsum( plot_margin = margin(0,0,0,0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=7), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) +
+  scale_x_date(limits = as.Date(c("2000-01-01", point_max)))  
+print(plot_climat_par_secteur)
+```
+
+## Evolution des prix prévue par secteur
+```{r,fig.dim = c(14, 9)}
+#Prix par secteur
+plot_prix_prevus_par_secteur <-ggplot(data = global_prix,
+                                 aes(x = DATE, y = OBS_VALUE, fill = forcats::fct_relevel(cat, c("Bâtiment", "Industrie manufacturière", "Commerce", "Services"), after = 1)))+
+  geom_ribbon(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-01"),fill="Récession"))+
+  geom_ribbon(aes(xmin = as.Date("2019-10-01"), xmax = as.Date("2020-06-01"),fill="Récession"))+
+  geom_line(aes(col = cat), size =1.1) +
+  geom_hline(yintercept=0, linetype="dashed", color = "black")+
+  labs(title = "Tendance des prix prévue par secteur", 
+       subtitle = paste("Lecture : En", point_max_litt, ", le solde d'opinion des anticipations de prix de vente dans l'industrie manuafacturière est de ", valeur <- global_prix %>% filter(DATE == max(DATE), cat == "Industrie manufacturière") %>% pull(OBS_VALUE),
+                        ",",valeur <- global_prix %>% filter(DATE == max(DATE), cat == "Industrie manufacturière") %>% pull(conj),"par rapport au mois précédent. \nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       y = "Solde d'opinions (CVS, en points)", x = "Date") +
+  scale_color_manual(values = c("#F8766D", "#C77CFF", "#00B8E7", "orange")) + 
+  scale_fill_manual(name = '',  values=c("Récession" = "grey60"))+
+  theme_ipsum( plot_margin = margin(0,0,0,0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=7), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) +
+  scale_x_date(limits = as.Date(c("2000-01-01", point_max)))  
+print(plot_prix_prevus_par_secteur)
+```
+
+
+## Evolution de l'emploi prévue par secteur
+```{r,fig.dim = c(14, 9)}
+#Emploi par secteur 
+###Climat par secteur 
+plot_emploi_par_secteur <-ggplot(data = global_emploi,
+                                 aes(x = DATE, y = OBS_VALUE, fill = forcats::fct_relevel(cat, c("Bâtiment", "Industrie manufacturière", "Commerce", "Services"), after = 1)))+
+  geom_ribbon(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-01"),fill="Récession"))+
+  geom_ribbon(aes(xmin = as.Date("2019-10-01"), xmax = as.Date("2020-06-01"),fill="Récession"))+
+  geom_line(aes(col = cat), size =1.1) +
+  geom_hline(yintercept=0, linetype="dashed", color = "black")+
+  labs(title = "Evolution prévue de l'emploi par secteur", 
+       subtitle = paste("Lecture : En", point_max_litt, ", le solde d'opinion sur l'évolution prévue de l'emploi dans l'industrie manufacturière est de", valeur <- global_emploi %>% filter(DATE == max(DATE), cat == "Industrie manufacturière") %>% pull(OBS_VALUE),
+                        ",", valeur <- global_emploi %>% filter(DATE == max(DATE), cat == "Industrie manufacturière") %>% pull(conj), "par rapport au mois précédent. \nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       y = "Solde d'opinions (CVS, en points)", x = "Date") +
+  scale_color_manual(values = c("#F8766D", "#C77CFF", "#00B8E7", "orange")) + 
+  scale_fill_manual(name = '',  values=c("Récession" = "grey60"))+
+  theme_ipsum( plot_margin = margin(0,0,0,0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=7), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) +
+  scale_x_date(limits = as.Date(c("2000-01-01", point_max)))  
+print(plot_emploi_par_secteur)
+```
+
+# Contraintes de production dans l'industrie
+```{r,fig.dim = c(14, 9)}
+###Difficultés dans l'industrie 
+plot_difficulte_industrie <-ggplot(data = difficultes_indus,
+                                 aes(x = DATE, y = OBS_VALUE, fill = forcats::fct_relevel(TITLE_FR2, c("Difficultés d'approvisionnement", "Difficultés d'équipement", "Insuffisance de personnel", "Contraintes financières", "Demande insuffisante"), after = 1)))+
+  geom_ribbon(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2009-06-01"),fill="Récession"))+
+  geom_ribbon(aes(xmin = as.Date("2019-10-01"), xmax = as.Date("2020-06-01"),fill="Récession"))+
+  geom_line(aes(col = TITLE_FR2), size =1.1) +
+  labs(title = "Contraintes d'offre et de demande dans l'industrie manufacturière", 
+       subtitle = paste("Lecture : En", point_max_litt, "," , valeur <- difficultes_indus %>% filter(DATE == max(DATE), TITLE_FR2 == "Difficultés d'approvisionnement") %>% pull(OBS_VALUE) %>% round(digits =0), "% des entreprises de l'industrie manufacturière souffrent de difficutés d'approvisionnement,"
+                        , valeur <- difficultes_indus %>% filter(DATE == max(DATE), TITLE_FR2 == "Difficultés d'approvisionnement") %>% pull(conj), "par rapport au mois précédent. \nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       y = "Part des entreprises (%)", x = "Date", color = "") +
+  scale_color_manual(values = c("darkblue", "#C77CFF", "orange", "#993300", "darkgreen")) + 
+  scale_fill_manual(name = '',  values=c("Récession" = "grey60"))+
+  theme_ipsum( plot_margin = margin(0,0,0,0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=7), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) +
+  scale_x_date(limits = as.Date(c("2000-01-01", point_max))) +
+  guides(color = guide_legend(title.position = "top", ncol = 2))
+print(plot_difficulte_industrie)
