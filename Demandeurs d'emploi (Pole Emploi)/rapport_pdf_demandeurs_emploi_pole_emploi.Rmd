@@ -63,7 +63,7 @@ setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Demandeurs d'emploi (
 getwd()
 
 ##########0) Paramètre à fixer 
-date_prov_litt <- "1er trimestre 2023"
+date_prov_litt <- "2e trimestre 2023"
 ```
 
 # Présentation
@@ -78,7 +78,7 @@ On s'intéresse ensuite à la structure des inscrits à Pôle Emploi, d'abord pa
 
 On relève également la durée d'inscription à Pôle Emploi, décomposée ensuite par tranches d'âge ou bien entre inscrits et sortants. 
 
-On analyse enfin les motifs d'entrée et de sortie à Pôle Emploi au cours du `r date_prov_litt`. Une attention particulière doit être portée à l'évolution des radiations ou du non renouvellement d'inscription, dans la mesure où il s'agit de sources administratives. Les comportements d'inscription et de contrôle administratif expliquent en effet une partie des variations, parallèlement à la conjoncture du marché du travail. 
+On analyse enfin les motifs d'entrée et de sortie à Pôle Emploi au cours du `r date_prov_litt`. Une attention particulière doit être portée à l'évolution des radiations ou du non renouvellement d'inscription, dans la mesure où il s'agit de sources administratives. Les comportements d'inscription et de contrôle administratif expliquent en effet une partie des variations, parallèlement à la conjoncture du marché du travail. On présente aussi la part des inscrits indemnisés par Pôle Emploi.
 
 Le rapport se conclut avec une confrontation des différentes sources des demandeurs d'emploi, à savoir les données administratives de Pôle Emploi présentées dans ce rapport avec les données d'enquête de l'Insee (mesurant le chômage BIT). On présente pour chaque trimestre l'écart entre le nombre de catégories A à Pôle Emploi et le nombre de chômeurs BIT mesurés par l'Insee. 
 
@@ -139,20 +139,57 @@ chom_pol_emploi_global =get_insee_idbank(poleemploi_global) %>%
   filter(DATE >= as.Date('1996-01-01')) %>% 
   mutate(OBS_VALUE = OBS_VALUE/1000)
 
+#Ensemble ABCDE FRANCE Entière 
+url_ens_alloc <- "https://statistiques.pole-emploi.org/stmt/trsl?fa=M,O"
+response_abcde <- GET(url_ens_alloc)
+html_content_abcde <- content(response_abcde, as = "text")
+parsed_html_abcde <- read_html(html_content_abcde)
+pe_abcde_fe <- html_table(parsed_html_abcde, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+pe_abcde_fe <- pe_abcde_fe  |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="2e trimestre", paste0(substr(Trimestre, 14, 17), "-04-01"), NA_real_)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="3e trimestre", paste0(substr(Trimestre, 14, 17), "-07-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="4e trimestre", paste0(substr(Trimestre, 14, 17), "-10-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 13)=="1er trimestre", paste0(substr(Trimestre, 15, 18), "-01-01"), DATE)) |>
+  mutate(DATE = as.Date(DATE)) |>
+  select(-Trimestre) |>
+  rename(nb_alloc_fe = "Nombre de demandeurs d'emploi") |>
+  mutate(nb_alloc_fe = gsub("\\s+", "", nb_alloc_fe)) |>
+  mutate(nb_alloc_fe = as.numeric(nb_alloc_fe)) |>
+  mutate(nb_alloc_fe =nb_alloc_fe/1000000)
 
+abcde_frdom <- pe_abcde_fe |>
+  pivot_longer(cols=c(1), names_to = "TITLE_FR2", values_to = "OBS_VALUE") |>
+  mutate(TITLE_FR2 = "Toutes catégories")
 #graph cat A / cat ABC * France métro/France hors mayotte
-df_abc <- filter(chom_pol_emploi_global, (TITLE_FR2 == "Catégorie A" | TITLE_FR2 == "Catégories A, B et C") & TITLE_FR4 == "France hors Mayotte")
+df_abc <- filter(chom_pol_emploi_global, (TITLE_FR2 == "Catégorie A" | TITLE_FR2 == "Catégories A, B et C") & TITLE_FR4 == "France hors Mayotte") |>
+  select(-TITLE_FR4)
+df_abc <- rbind(df_abc, abcde_frdom)
+
+valeura <- df_abc %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégorie A") %>% pull(OBS_VALUE) |> round(digits = 1)
+
+
+valeurc <- df_abc %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégories A, B et C") %>% pull(OBS_VALUE) |> round(digits = 1)
+
+
+valeure <- df_abc %>% filter(DATE == max(DATE), TITLE_FR2 == "Toutes catégories") %>% pull(OBS_VALUE) |> round(digits = 1)
+
+
 ```
 
 
 # Inscriptions à Pôle Emploi par catégories
-## Catégorie A et Catégorie A-B-C (France hors Mayotte)
+## Catégorie A, Catégorie A-B-C et toutes catégories (France hors Mayotte)
+
+Au `r date_prov_litt`, le nombre de demandeurs d'emploi en catégorie A s'établit à `r valeura` millions d'individus. 
+
+Il y a `r valeurc` millions d'individus en catégories A, B ou C et `r valeure` millions d'individus inscrits à Pôle Emploi en comptant toutes les catégories. 
+
 ```{r,fig.dim = c(14, 9)}
 plot_abc <-ggplot(data = df_abc,
                                aes(x = DATE,
-                                   y = OBS_VALUE, fill=forcats::fct_relevel(TITLE_FR2, c("Catégorie A", "Catégories A, B et C"), after = 1))) +
+                                   y = OBS_VALUE, fill=forcats::fct_relevel(TITLE_FR2, c("Catégorie A", "Catégories A, B et C", "Toutes catégories"), after = 1))) +
   geom_line(aes(col = TITLE_FR2), size =1.1) +
-  labs(title = "Demandeurs d'emploi tenus de chercher un emploi depuis 1996", 
+  labs(title = "Demandeurs d'emploi par catégorie depuis 1996 (France hors Mayotte)", 
        
        subtitle = paste0("Lecture : Au ",date_prov_litt, ", Pôle Emploi recense ", valeur <- df_abc %>% filter(DATE == max(DATE), TITLE_FR2=="Catégorie A") %>% pull(OBS_VALUE) %>%  round(digits =1),  " millions de demandeurs d'emploi en catégorie A (sans emploi et tenus de chercher un emploi). \nChamp : France hors Mayotte \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
        
@@ -173,8 +210,7 @@ plot_abc <-ggplot(data = df_abc,
     plot.subtitle = element_text(color = "#333333", face = "italic"),
     axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
     axis.title.y = element_text(hjust = 0.5)) + 
-  ylim(0,NA) +
-   scale_colour_manual(values = c("#F8766D","#00BA38"))
+  ylim(0,NA) 
 
 print(plot_abc)
 ```
@@ -214,23 +250,37 @@ plot_abcde <-ggplot(data = df_abcde,
 print(plot_abcde)
 ```
 
-## Variation trimestrielle et annuelle des demandeurs d'emploi
 ```{r, echo=FALSE, message=FALSE, results='hide'}
-var_pe <- rbind(df_abc, df_abcde) |>
-  filter(TITLE_FR4 == "France hors Mayotte" | (TITLE_FR4 == "France métropolitaine" & TITLE_FR2 == "Ensemble des catégories")) |>
+var_pe <- df_abc |>
   group_by(TITLE_FR2) |>
   arrange(DATE) |>
   mutate(gliss_annuel = ((OBS_VALUE/lag(OBS_VALUE, 4))-1)*100) |>
   mutate(var_trim = ((OBS_VALUE/lag(OBS_VALUE, 1))-1)*100) |>
   ungroup() |>
-  pivot_longer(cols=c(5:6), names_to = "Variation", values_to = "value2") |>
+  pivot_longer(cols=c(4:5), names_to = "Variation", values_to = "value2") |>
   mutate(Variation = ifelse(Variation == "gliss_annuel", "Glissement annuel", "Variation trimestrielle"))
 
-valeur <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégorie A", Variation == "Variation trimestrielle") %>% pull(value2) |> round(digits = 1)
-valeur2 <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégorie A", Variation == "Glissement annuel") %>% pull(value2) |> round(digits = 1)
+valeura <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégorie A", Variation == "Variation trimestrielle") %>% pull(value2) |> round(digits = 1)
+valeura2 <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégorie A", Variation == "Glissement annuel") %>% pull(value2) |> round(digits = 1)
+
+valeurc <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégories A, B et C", Variation == "Variation trimestrielle") %>% pull(value2) |> round(digits = 1)
+valeurc2 <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégories A, B et C", Variation == "Glissement annuel") %>% pull(value2) |> round(digits = 1)
+
+valeure <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Toutes catégories", Variation == "Variation trimestrielle") %>% pull(value2) |> round(digits = 1)
+valeure2 <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Toutes catégories", Variation == "Glissement annuel") %>% pull(value2) |> round(digits = 1)
 
 
 ```
+
+\newpage 
+
+## Variation trimestrielle et annuelle des demandeurs d'emploi
+
+Au `r date_prov_litt`, le nombre de demandeurs d'emploi en catégorie A `r ifelse(valeura>0, "augmente", "baisse")` de `r valeura` % par rapport au trimestre précédent et `r ifelse(valeura2>0, "augmente", "baisse")` de `r valeura2`% sur un an. 
+
+Le nombre de demandeurs d'emploi en catégories A-B-C `r ifelse(valeurc>0, "augmente", "baisse")` de `r valeurc` % par rapport au trimestre précédent et `r ifelse(valeurc2>0, "augmente", "baisse")` de `r valeurc2`% sur un an. 
+
+Le nombre de demandeurs d'emploi toutes catégories comprises `r ifelse(valeure>0, "augmente", "baisse")` de `r valeure` % par rapport au trimestre précédent et `r ifelse(valeure2>0, "augmente", "baisse")` de `r valeure2`% sur un an. 
 
 ```{r, fig.dim = c(16,16)}
 
@@ -241,7 +291,7 @@ plot_var_pe <-ggplot(data = var_pe,
   geom_hline(yintercept=0, linetype="dashed", color = "black") +
   labs(title = "Variation trimestrielle et annuelle des demandeurs d'emplois", 
        
-       subtitle = paste0("Lecture : Au ",date_prov_litt, ", le nombre de demandeurs d'emplois en catégorie A ", ifelse(valeur>0, "augmente", "baisse"),  " de ", valeur,  " % par rapport au dernier trimestre et ", ifelse(valeur2>0, "augmente", "baisse")," de ", valeur2, " % sur un an. \nChamp : France hors Mayotte (cat A, ABC) et France métropolitaine (Toutes catégories) \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", le nombre de demandeurs d'emplois en catégorie A ", ifelse(valeura>0, "augmente", "baisse"),  " de ", valeura2,  " % par rapport au dernier trimestre et ", ifelse(valeura2>0, "augmente", "baisse")," de ", valeura2, " % sur un an. \nChamp : France hors Mayotte (cat A, ABC) et France métropolitaine (Toutes catégories) \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
        
        y = "Pourcentage (%)", x = "Année") +
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
@@ -649,7 +699,98 @@ print(plot_sorties)
 
 ```
 
-# La confrontation des sources administratives (Dares-Pôle Emploi) avec l'enquête Emploi (chômage BIT-Insee)
+
+```{r, echo=FALSE, message=FALSE, results='hide'}
+url_indemnise <- "https://statistiques.pole-emploi.org/indem/indem?ss=3"
+response_i <- GET(url_indemnise)
+html_content_i <- content(response_i, as = "text")
+parsed_html_i <- read_html(html_content_i)
+pe_alloc <- html_table(parsed_html_i, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+
+pe_alloc$trim <-  str_extract(pe_alloc$Mois, "\\w+")
+pe_alloc$annee <-str_extract(pe_alloc$Mois, "\\d{4}")
+pe_alloc <- mutate(pe_alloc, trim2 = ifelse(trim == "Janvier" |trim== "Février" | trim== "Mars", "-01-01", NA_real_)) %>%
+    mutate(trim2= ifelse(trim== "Avril" |trim== "Mai" | trim== "Juin", "-04-01", trim2)) %>% 
+    mutate(trim2= ifelse(trim== "Juillet" |trim== "Août" | trim== "Septembre", "-07-01", trim2)) %>% 
+    mutate(trim2= ifelse(trim== "Octobre" |trim== "Novembre" | trim== "Décembre", "-10-01", trim2)) |>
+  mutate(DATE = paste0(annee, trim2)) %>% 
+  mutate(DATE = as.Date(DATE)) %>% 
+  rename(nb_mensuel_alloc = "Nombre d'allocataires indemnisés") %>% 
+  mutate(nb_mensuel_alloc = gsub(" ", "", nb_mensuel_alloc)) %>% 
+  mutate(nb_mensuel_alloc = as.numeric(nb_mensuel_alloc)) %>% 
+  arrange(DATE) %>% 
+  group_by(DATE) %>% 
+  mutate(alloc = sum(nb_mensuel_alloc)/3) %>% 
+  ungroup() %>% 
+  select(DATE, alloc) %>% 
+  mutate(alloc = alloc/1000000)
+
+url_ens_alloc <- "https://statistiques.pole-emploi.org/stmt/trsl?fa=M,O"
+response_abcde <- GET(url_ens_alloc)
+html_content_abcde <- content(response_abcde, as = "text")
+parsed_html_abcde <- read_html(html_content_abcde)
+pe_abcde_fe <- html_table(parsed_html_abcde, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+pe_abcde_fe <- pe_abcde_fe  |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="2e trimestre", paste0(substr(Trimestre, 14, 17), "-04-01"), NA_real_)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="3e trimestre", paste0(substr(Trimestre, 14, 17), "-07-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="4e trimestre", paste0(substr(Trimestre, 14, 17), "-10-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 13)=="1er trimestre", paste0(substr(Trimestre, 15, 18), "-01-01"), DATE)) |>
+  mutate(DATE = as.Date(DATE)) |>
+  select(-Trimestre) |>
+  rename(nb_alloc_fe = "Nombre de demandeurs d'emploi") |>
+  mutate(nb_alloc_fe = gsub("\\s+", "", nb_alloc_fe)) |>
+  mutate(nb_alloc_fe = as.numeric(nb_alloc_fe)) |>
+  mutate(nb_alloc_fe =nb_alloc_fe/1000000)
+
+pe_alloc <- left_join(pe_alloc, pe_abcde_fe, by = "DATE")
+pe_alloc <- pe_alloc |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-01-01", "1er trimestre", NA)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-04-01", "2e trimestre", trim)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-07-01", "3e trimestre", trim)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-10-01", "4e trimestre", trim)) |>
+  mutate(trim = paste(trim, substr(DATE, 1, 4)))
+
+date_indem <- pe_alloc |> filter(DATE == max(DATE)) |> pull(trim)
+```
+
+\newpage 
+
+# Les allocataires indemnisés par Pôle Emploi
+Attention : dernier point au `r date_indem[1]`. 
+
+```{r, fig.dim = c(14,9)}
+pe_alloc <- select(pe_alloc, DATE, alloc, nb_alloc_fe, trim) |>
+  mutate(part_indemnises = alloc/nb_alloc_fe*100)
+
+plot_indemnises <- ggplot(data = pe_alloc,
+                    aes(x = DATE)) +
+  geom_line(aes(y=part_indemnises, color = "Part des allocataires indemnisés"), size =1.1) +
+  labs(title = "Part des allocataires indemnisés par Pôle Emploi", 
+       
+       subtitle = paste0("Lecture : Au ",date_indem, ", ", valeur <- pe_alloc %>% filter(DATE == max(DATE)) %>% pull(part_indemnises) %>%  round(digits =1), " des allocataires inscrits à Pôle Emploi sont indemnisés. \nChamp : France hors Mayotte \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_indem, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Pourcentage (%)", x = "Année") +
+  scale_colour_manual(values = c("Part des allocataires indemnisés" = "#F8766D"))+
+  #scale_fill_manual(values=c("Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee"="orange"))+
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) 
+print(plot_indemnises)
+```
+
 
 ```{r,echo=FALSE, message=FALSE, results='hide'}
 get_personnes_elargi = 
@@ -687,18 +828,34 @@ cat_a <- filter(df_abc, TITLE_FR2 == "Catégorie A") |>
   rename(value = OBS_VALUE, Composante = TITLE_FR2) |>
   mutate(Composante = ifelse(Composante == "Catégorie A", "Catégorie A de Pôle Emploi", Composante))
 
-pole_emploi_insee <- rbind(chom_personnes, cat_a) |> filter(DATE >= as.Date('2003-01-01'))
+pole_emploi_insee <- rbind(chom_personnes, cat_a) |> filter(DATE >= as.Date('2003-01-01')) |>
+  mutate(count = 1) |>
+  group_by(DATE) |>
+  mutate(sum = sum(count)) |>
+  filter(sum==3) |>
+  select(-sum, -count)
 
 pole_emploi_insee <- pole_emploi_insee |>
   group_by(DATE) |>
   mutate(ecart_cata_bit = value[Composante == "Catégorie A de Pôle Emploi"] - value[Composante == "Chômeurs au sens du BIT"]) |>
   ungroup() |>
   pivot_wider(names_from = Composante, values_from = value, id_cols = c(DATE, ecart_cata_bit)) |>
-  rename(cata_pe = 'Catégorie A de Pôle Emploi', halo_bit = "Chômage BIT et halo autour du chômage", bit = "Chômeurs au sens du BIT")
+  rename(cata_pe = 'Catégorie A de Pôle Emploi', halo_bit = "Chômage BIT et halo autour du chômage", bit = "Chômeurs au sens du BIT") |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-01-01", "1er trimestre", NA)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-04-01", "2e trimestre", trim)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-07-01", "3e trimestre", trim)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-10-01", "4e trimestre", trim)) |>
+  mutate(trim = paste(trim, substr(DATE, 1, 4)))
 
-
+date_admin <- pole_emploi_insee |> filter(DATE == max(DATE)) |> pull(trim)
 
 ```
+
+\newpage
+
+# La confrontation des sources administratives (Dares-Pôle Emploi) avec l'enquête Emploi (chômage BIT-Insee)
+
+Attention : dernier point au `r date_admin`.
 
 ```{r, fig.dim=c(14,9)}
 plot_insee_dares <-ggplot(data = pole_emploi_insee,
@@ -709,7 +866,7 @@ plot_insee_dares <-ggplot(data = pole_emploi_insee,
   geom_col(aes(y=ecart_cata_bit, color = "Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee", fill = "Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee"), color = "black")+
   labs(title = "Ecart entre les demandeurs d'emploi de Pôle Emploi et le chômage mesuré par l'Insee", 
        
-       subtitle = paste0("Lecture : Au ",date_prov_litt, ", l'écart entre le nombre de catégories A mesurées par Pôle Emploi et le nombre de chômeur BIT mesuré par l'Insee est de ", valeur <- pole_emploi_insee %>% filter(DATE == max(DATE)) %>% pull(ecart_cata_bit) %>%  round(digits =1), " million d'individus. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       subtitle = paste0("Lecture : Au ",date_admin, ", l'écart entre le nombre de catégories A mesurées par Pôle Emploi et le nombre de chômeur BIT mesuré par l'Insee est de ", valeur <- pole_emploi_insee %>% filter(DATE == max(DATE)) %>% pull(ecart_cata_bit) %>%  round(digits =1), " million d'individus. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ",date_admin, ") \nCalculs et graphiques : @statjunior"), 
        
        y = "Millions", x = "Année") +
   scale_colour_manual(values = c("Chômeurs au sens du BIT" = "#F8766D",  "Chômeurs BIT et halo autour du chômage"= "purple", "Catégorie A de Pôle Emploi"="#00B8E7"))+
