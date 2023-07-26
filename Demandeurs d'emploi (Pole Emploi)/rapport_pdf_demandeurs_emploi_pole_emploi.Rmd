@@ -84,7 +84,7 @@ Le rapport se conclut avec une confrontation des différentes sources des demand
 
 Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format(Sys.time(), '%d %B %Y à %H heures et %M minutes')`. Les potentielles erreurs présentes dans ce document relèvent uniquement de la responsabilité de Statjunior.
 
-Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Demandeurs%20d'emploi%20(P%C3%B4le%20Emploi)/).
+Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Demandeurs%20d'emploi%20(Pôle%20Emploi)/).
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 list_idbank_pole_emploi_global = 
