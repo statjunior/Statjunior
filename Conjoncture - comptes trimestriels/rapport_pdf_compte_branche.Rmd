@@ -1020,13 +1020,13 @@ rm(valeur)
 ```{r,fig.dim = c(14, 9)}
 valeur <- prod_travail_2019 |> filter(DATE==max(DATE)) |> pull(prod_travail_marng) |> round(digits =1)
 
-plot_prod_travail_2019 <-ggplot(data = prod_travail_2019,
+plot_prod_travail_2019 <- ggplot(data = prod_travail_2019,
                            aes(x = DATE)) +
   geom_line(aes(y = va_marng_L, color = "Valeur ajoutée (marchand non agricole)"), size = 1.3) + 
   geom_line(aes(y = prod_travail_marng, color = "Productivité horaire du travail (marchand non agricole)"), size = 1.1) +
   labs(title = "Valeur ajoutée et productivité du travail depuis la crise de la Covid", 
        
-       subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail", ifelse(valeur>100, "augmente", "recule"), "de", ifelse(valeur>100, valeur-100, 100-valeur),"% par rapport au 4e trimestre 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail", ifelse(valeur>100, "augmente", "recule"), "de", ifelse(valeur>100, valeur-100,100-valeur),"% par rapport au 4e trimestre 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Base 100 au 4e trimestre 2019", x = "Année") +
   scale_x_date(limits = as.Date(c("2019-10-01", date_max_compte_def))) + 

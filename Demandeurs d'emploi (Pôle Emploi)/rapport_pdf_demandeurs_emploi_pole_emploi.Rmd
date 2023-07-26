@@ -1,0 +1,739 @@
+---
+title: "Les demandeurs d'emploi inscrits à Pôle Emploi"
+subtitle: "Données administratives du 2e trimestre 2023."
+author: "@statjunior"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    template: eisvogel.tex
+    keep_tex: true
+titlepage: true
+titlepage-color: "AD641F"
+titlepage-text-color: "FFFFFF"
+disable-header-and-footer: true
+logo: "logo.pdf"
+logo-width: 200
+lang: fr-FR
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+list(rm=ls())
+library(insee)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(readxl) 
+library(writexl)
+library(tsibble)
+library(tibble)
+library(janitor)
+library(tsbox)
+library(knitr)
+library(tempdisagg)
+library(labelled)
+library(stringr)
+library(Hmisc)
+library(hrbrthemes)
+library(lubridate)
+library(conflicted)
+library(base)
+library(tidyr)
+library(cowplot)
+library(plotly)
+library(httr)
+library(rvest)
+library(readr)
+
+conflict_prefer("rename", "dplyr")
+conflict_prefer("filter", "dplyr")
+conflict_prefer("mutate", "dplyr")
+conflict_prefer("arrange", "dplyr")
+conflict_prefer("replace", "dplyr")
+conflict_prefer("lag", "dplyr")
+conflict_prefer("summarise", "dplyr")
+conflict_prefer("relocate", "dplyr")
+conflict_prefer("select", "dplyr")
+
+#Chemin d'accès
+setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Demandeurs d'emploi (Pôle Emploi)/")
+getwd()
+
+##########0) Paramètre à fixer 
+date_prov_litt <- "1er trimestre 2023"
+```
+
+# Présentation
+
+Ce rapport *RMarkdown* analyse les effectifs de demandeurs d'emploi à Pôle Emploi au `r date_prov_litt`. Les données sont produites par la Dares et Pôle Emploi à partir de sources administratives exhaustives. 
+
+**Les données sur les demandeurs d'emploi de Pôle Emploi ne doivent pas être confondues avec celles sur le chômage au sens du BIT produites par l'Insee**. Un autre rapport (consultable [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Conjoncture%20-%20comptes%20trimestriels/)) analyse les différents indicateurs du chômage au sens de l'Insee. 
+
+Dans un premier temps, le rapport présente le nombre de demandeurs d'emploi inscrits à Pôle Emploi par catégorie. Les catégorie A-B-C regroupent les inscrits tenus de chercher un emploi, alors que les catégories D et E regroupent les inscrits dispensés de recherche d'emploi. La catégorie A inclut uniquement les inscrits sans emploi, alors que les catégories B et C regroupent les inscrits en emploi à temps partiel (inférieur à 78 heures par mois pour la catégorie B, supérieur à 78 heures par mois pour la catégorie C). 
+
+On s'intéresse ensuite à la structure des inscrits à Pôle Emploi, d'abord par sexe puis par tranches d'âge.
+
+On relève également la durée d'inscription à Pôle Emploi, décomposée ensuite par tranches d'âge ou bien entre inscrits et sortants. 
+
+On analyse enfin les motifs d'entrée et de sortie à Pôle Emploi au cours du `r date_prov_litt`. Une attention particulière doit être portée à l'évolution des radiations ou du non renouvellement d'inscription, dans la mesure où il s'agit de sources administratives. Les comportements d'inscription et de contrôle administratif expliquent en effet une partie des variations, parallèlement à la conjoncture du marché du travail. 
+
+Le rapport se conclut avec une confrontation des différentes sources des demandeurs d'emploi, à savoir les données administratives de Pôle Emploi présentées dans ce rapport avec les données d'enquête de l'Insee (mesurant le chômage BIT). On présente pour chaque trimestre l'écart entre le nombre de catégories A à Pôle Emploi et le nombre de chômeurs BIT mesurés par l'Insee. 
+
+Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format(Sys.time(), '%d %B %Y à %H heures et %M minutes')`. Les potentielles erreurs présentes dans ce document relèvent uniquement de la responsabilité de Statjunior.
+
+Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Conjoncture%20-%20comptes%20trimestriels/).
+
+```{r, echo=FALSE, message=FALSE, results='hide'}
+list_idbank_pole_emploi_global = 
+  get_idbank_list("DEMANDES-EMPLOIS-NATIONALES") %>% 
+  filter(CORRECTION_label_fr == "Corrigé des variations saisonnières et du nombre de jours ouvrables") %>% 
+  filter(REF_AREA_label_fr == "France hors Mayotte" | REF_AREA_label_fr == "France métropolitaine" | REF_AREA_label_fr == "France") %>% 
+  filter(SERIE_ARRETEE_label_fr == "non") %>% 
+  filter(SEXE_label_fr == "Ensemble" | SEXE_label_fr == "Sans objet")
+
+list_idbank_pole_emploi_sexe = 
+  get_idbank_list("DEMANDES-EMPLOIS-NATIONALES") %>% 
+  filter(CORRECTION_label_fr == "Corrigé des variations saisonnières et du nombre de jours ouvrables") %>% 
+  filter(SERIE_ARRETEE_label_fr == "non") %>% 
+  filter(SEXE_label_fr == "Hommes" | SEXE_label_fr == "Femmes") %>% 
+  filter(AGE == "SO") %>% 
+  filter(REF_AREA == "FR-D976")
+
+
+list_idbank_pole_emploi_age = 
+  get_idbank_list("DEMANDES-EMPLOIS-NATIONALES") %>% 
+  filter(CORRECTION_label_fr == "Corrigé des variations saisonnières et du nombre de jours ouvrables") %>% 
+  filter(REF_AREA_label_fr == "France hors Mayotte" | REF_AREA_label_fr == "France métropolitaine" | REF_AREA_label_fr == "France") %>% 
+  filter(SERIE_ARRETEE_label_fr == "non") %>% 
+  filter(SEXE_label_fr == "Ensemble" | SEXE_label_fr == "Sans objet") %>% 
+  filter(AGE == "00-24" | AGE == "25-49" | AGE == "50-") %>% 
+  filter(REF_AREA == "FR-D976")
+
+
+###Niveau global des demandeurs d'emploi
+poleemploi_global = list_idbank_pole_emploi_global %>% pull(idbank)
+
+chom_pol_emploi_global =get_insee_idbank(poleemploi_global) %>% 
+  split_title() %>% 
+  filter(TITLE_FR3 != "De moins de 25 ans") %>% 
+  filter(TITLE_FR3 != "De 25 à 49 ans") %>% 
+  filter(TITLE_FR3 != "De 50 ans et plus")  %>% 
+  filter(TITLE_FR3 != "Ancienneté sur les listes : moins d'un an") %>% 
+  filter(TITLE_FR3 != "Ancienneté sur les listes : plus d'un an") %>% 
+  filter(TITLE_FR3 != "Durée d’un an ou plus") %>% 
+  filter(TITLE_FR3 != "Durée de deux ans ou plus") %>% 
+  filter(TITLE_FR3 != "50 ans ou plus") %>% 
+  filter(TITLE_FR3 != "25 à 49 ans") %>% 
+  filter(TITLE_FR3 != "Moins de 25 ans") %>% 
+  filter(TITLE_FR1 == "Nombre moyen de demandeurs d'emploi inscrits sur le trimestre à Pôle emploi" | (TITLE_FR2 == "France hors Mayotte" & TITLE_FR4 == "A")) |>
+  mutate(OBS_VALUE = ifelse(TITLE_FR2=="France hors Mayotte", OBS_VALUE/1000, OBS_VALUE)) %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR2 == "France hors Mayotte", TITLE_FR2, TITLE_FR4)) %>% 
+  mutate(TITLE_FR2 = ifelse(TITLE_FR2 == "France hors Mayotte", "Catégorie A", TITLE_FR2)) %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR4 == "Série CVS-CJO", TITLE_FR3, TITLE_FR4)) %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR4 == "France", "France hors Mayotte", TITLE_FR4)) %>% 
+  mutate(TITLE_FR2 = ifelse(TITLE_FR2 == "Catégories A, B, C, D et E (ensemble des catégories)", "Ensemble des catégories", TITLE_FR2)) %>% 
+  select(DATE, OBS_VALUE, TITLE_FR2, TITLE_FR4) %>% 
+  filter(DATE >= as.Date('1996-01-01')) %>% 
+  mutate(OBS_VALUE = OBS_VALUE/1000)
+
+
+#graph cat A / cat ABC * France métro/France hors mayotte
+df_abc <- filter(chom_pol_emploi_global, (TITLE_FR2 == "Catégorie A" | TITLE_FR2 == "Catégories A, B et C") & TITLE_FR4 == "France hors Mayotte")
+```
+
+
+# Inscriptions à Pôle Emploi par catégories
+## Catégorie A et Catégorie A-B-C (France hors Mayotte)
+```{r,fig.dim = c(14, 9)}
+plot_abc <-ggplot(data = df_abc,
+                               aes(x = DATE,
+                                   y = OBS_VALUE, fill=forcats::fct_relevel(TITLE_FR2, c("Catégorie A", "Catégories A, B et C"), after = 1))) +
+  geom_line(aes(col = TITLE_FR2), size =1.1) +
+  labs(title = "Demandeurs d'emploi tenus de chercher un emploi depuis 1996", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", Pôle Emploi recense ", valeur <- df_abc %>% filter(DATE == max(DATE), TITLE_FR2=="Catégorie A") %>% pull(OBS_VALUE) %>%  round(digits =1),  " millions de demandeurs d'emploi en catégorie A (sans emploi et tenus de chercher un emploi). \nChamp : France hors Mayotte \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Millions", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  ylim(0,NA) +
+   scale_colour_manual(values = c("#F8766D","#00BA38"))
+
+print(plot_abc)
+```
+
+## Catégorie A, A-B-C et toutes catégories en France métropolitaine
+```{r, fig.dim = c(14, 9)}
+#graph cat A / ABC / ABCDE en France métropolitaine
+df_abcde <- filter(chom_pol_emploi_global, (TITLE_FR2 == "Catégorie A" | TITLE_FR2 == "Catégories A, B et C" | TITLE_FR2 == "Ensemble des catégories") & TITLE_FR4 == "France métropolitaine")
+
+plot_abcde <-ggplot(data = df_abcde,
+                  aes(x = DATE,
+                      y = OBS_VALUE, fill=forcats::fct_relevel(TITLE_FR2, c("Catégorie A", "Catégories A, B et C", "Ensemble des catégories"), after = 1))) +
+  geom_line(aes(col = TITLE_FR2), size =1.1) +
+  labs(title = "Demandeurs d'emploi inscrits à Pôle Emploi en métropole depuis 1996", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", Pôle Emploi recense ", valeur <- df_abcde %>% filter(DATE == max(DATE), TITLE_FR2=="Ensemble des catégories") %>% pull(OBS_VALUE) %>%  round(digits =1),  " millions d'inscrits, toutes catégories incluses. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Millions", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  ylim(0,NA)
+
+print(plot_abcde)
+```
+
+## Variation trimestrielle et annuelle des demandeurs d'emploi
+```{r, echo=FALSE, message=FALSE, results='hide'}
+var_pe <- rbind(df_abc, df_abcde) |>
+  filter(TITLE_FR4 == "France hors Mayotte" | (TITLE_FR4 == "France métropolitaine" & TITLE_FR2 == "Ensemble des catégories")) |>
+  group_by(TITLE_FR2) |>
+  arrange(DATE) |>
+  mutate(gliss_annuel = ((OBS_VALUE/lag(OBS_VALUE, 4))-1)*100) |>
+  mutate(var_trim = ((OBS_VALUE/lag(OBS_VALUE, 1))-1)*100) |>
+  ungroup() |>
+  pivot_longer(cols=c(5:6), names_to = "Variation", values_to = "value2") |>
+  mutate(Variation = ifelse(Variation == "gliss_annuel", "Glissement annuel", "Variation trimestrielle"))
+
+valeur <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégorie A", Variation == "Variation trimestrielle") %>% pull(value2) |> round(digits = 1)
+valeur2 <- var_pe %>% filter(DATE == max(DATE), TITLE_FR2 == "Catégorie A", Variation == "Glissement annuel") %>% pull(value2) |> round(digits = 1)
+
+
+```
+
+```{r, fig.dim = c(16,16)}
+
+plot_var_pe <-ggplot(data = var_pe,
+                    aes(x = DATE,
+                        y = value2)) +
+  geom_line(aes(col = TITLE_FR2), size =1.1) +
+  geom_hline(yintercept=0, linetype="dashed", color = "black") +
+  labs(title = "Variation trimestrielle et annuelle des demandeurs d'emplois", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", le nombre de demandeurs d'emplois en catégorie A ", ifelse(valeur>0, "augmente", "baisse"),  " de ", valeur,  " % par rapport au dernier trimestre et ", ifelse(valeur2>0, "augmente", "baisse")," de ", valeur2, " % sur un an. \nChamp : France hors Mayotte (cat A, ABC) et France métropolitaine (Toutes catégories) \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Pourcentage (%)", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  facet_wrap(vars(Variation), scales = "free",nrow = 2)
+
+print(plot_var_pe)
+
+```
+
+# Structure des inscrits par genre et par tranche d'âge 
+## Par genre (catégorie A et catégorie A-B-C)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+#Femmes/Hommes * A/ABC * France Hors Mayotte 
+poleemploi_sexe = list_idbank_pole_emploi_sexe %>% pull(idbank)
+
+chom_pol_emploi_sexe =get_insee_idbank(poleemploi_sexe) %>% 
+  split_title() %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR4 == "A", "Catégorie A", "Catégories A-B-C")) %>% 
+  select(DATE, OBS_VALUE, TITLE_FR3, TITLE_FR4) %>% 
+  mutate(OBS_VALUE = round(OBS_VALUE/1000000,2))
+```
+
+
+```{r, fig.dim = c(14, 9)}
+plot_sexe <-ggplot(data = chom_pol_emploi_sexe,
+                    aes(x = DATE,
+                        y = OBS_VALUE)) +
+  geom_line(aes(col = TITLE_FR3), size =1.1) +
+  labs(title = "Demandeurs d'emploi inscrits à Pôle Emploi par genre", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", Pôle Emploi recense ", valeur <- chom_pol_emploi_sexe %>% filter(DATE == max(DATE), TITLE_FR4=="Catégorie A", TITLE_FR3 == "Femmes") %>% pull(OBS_VALUE) %>%  round(digits =1),  " millions de femmes inscrites en catégorie A (sans emploi et tenus de chercher un emploi). \nChamp : France hors Mayotte \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Millions", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  ylim(0,NA) + 
+  facet_wrap(vars(TITLE_FR4))
+
+print(plot_sexe)
+```
+
+
+## Par tranche d'âge (catégorie A et catégorie A-B-C)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+#Classe d'age * A/ABC * France Hors Mayotte
+poleemploi_age = list_idbank_pole_emploi_age %>% pull(idbank)
+
+chom_pol_emploi_age =get_insee_idbank(poleemploi_age) %>% 
+  split_title() %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR4 == "A", "Catégorie A", "Catégories A-B-C")) %>% 
+  select(DATE, OBS_VALUE, TITLE_FR3, TITLE_FR4) %>% 
+  mutate(OBS_VALUE = round(OBS_VALUE/1000000,2)) 
+
+chom_pol_emploi_age$TITLE_FR3 <- forcats::fct_relevel(
+  chom_pol_emploi_age$TITLE_FR3,
+  c("Moins de 25 ans", "25 à 49 ans", "50 ans ou plus"))
+```
+
+
+```{r, fig.dim = c(14, 9)}
+plot_age <-ggplot(data = chom_pol_emploi_age,
+                   aes(x = DATE,
+                       y = OBS_VALUE)) +
+  geom_line(aes(col = TITLE_FR3), size =1.1) +
+  labs(title = "Demandeurs d'emploi inscrits à Pôle Emploi par classe d'âge", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", Pôle Emploi recense ", valeur <- chom_pol_emploi_age %>% filter(DATE == max(DATE), TITLE_FR4=="Catégorie A", TITLE_FR3 == "50 ans ou plus") %>% pull(OBS_VALUE) %>%  round(digits =1),  " million de seniors de plus de 50 ans inscrits en catégorie A (sans emploi et tenus de chercher un emploi). \nChamp : France hors Mayotte \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Millions", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  ylim(0,NA) + 
+  facet_wrap(vars(TITLE_FR4))
+
+print(plot_age)
+```
+
+
+# Ancienneté d'inscription à Pôle Emploi
+## Parmi les inscrits au `r date_prov_litt`
+```{r,echo=FALSE, message=FALSE, results='hide'}
+#Ancienneté a Pole Emploi * A/ABC * France Hors Mayotte 
+url_duree <- "https://statistiques.pole-emploi.org/stmt/trsl?dd=f&fa=M&lg=0"
+# Effectuer une requête HTTP pour récupérer le contenu HTML de l'URL
+response_d <- GET(url_duree)
+html_content_d <- content(response_d, as = "text")
+# Analyser le contenu HTML pour extraire les données pertinentes
+parsed_html_d <- read_html(html_content_d)
+pe_duree <- html_table(parsed_html_d, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+
+pe_duree <- pe_duree |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="2e trimestre", paste0(substr(Trimestre, 14, 17), "-04-01"), NA_real_)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="3e trimestre", paste0(substr(Trimestre, 14, 17), "-07-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="4e trimestre", paste0(substr(Trimestre, 14, 17), "-10-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 13)=="1er trimestre", paste0(substr(Trimestre, 15, 18), "-01-01"), DATE)) |>
+  mutate(DATE = as.Date(DATE)) |>
+  pivot_longer(cols=c(2:8), names_to = "Composante", values_to = "value") |>
+  select(-Trimestre) |>
+  filter(Composante != "Total") |>
+  mutate(value = gsub("\\s+", "", value)) |>
+  mutate(value = as.numeric(value)) |>
+  mutate(value=value/1000) 
+
+pe_duree$Composante <- forcats::fct_relevel(
+  pe_duree$Composante,
+  c("Moins de 3 mois", "De 3 mois à moins de 6 mois", "De 6 mois à moins de 12 mois", 	
+    "De 1 an à moins de 2 ans", 	
+    "De 2 ans à moins de 3 ans", "3 ans et plus"))
+```
+
+
+```{r,fig.dim = c(16,16)}
+plot_duree <-ggplot(data = pe_duree,
+                      aes(x = DATE,
+                          y = value)) +
+  geom_line(aes(col = Composante), size =1.1, show.legend = FALSE) +
+  labs(title = "Ancienneté d'inscription à Pôle Emploi en catégorie A, B ou C", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", ", valeur <- pe_duree %>% filter(DATE == max(DATE), Composante=="3 ans et plus") %>% pull(value) %>%  round(digits =1),  " milliers de demandeurs d'emploi sont inscrits depuis plus de 3 ans à Pôle Emploi. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Milliers", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  facet_wrap(vars(Composante), nrow = 3) +ylim(0,NA)
+
+print(plot_duree)
+```
+
+## Par tranche d'âge (en distinguant les inscrits des sortants au `r date_prov_litt`)
+```{r,echo=FALSE, message=FALSE, results='hide'}
+#Durée d'inscription à Pole Emploi par tranche d'âge 
+url_dur_age <- "https://statistiques.pole-emploi.org/stmt/trsl?dd=a&fa=M&ld=0"
+# Effectuer une requête HTTP pour récupérer le contenu HTML de l'URL
+response_da <- GET(url_dur_age)
+html_content_da <- content(response_da, as = "text")
+# Analyser le contenu HTML pour extraire les données pertinentes
+parsed_html_da <- read_html(html_content_da)
+pe_age_anciennete <- html_table(parsed_html_da, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+
+pe_age_anciennete <- pe_age_anciennete |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="2e trimestre", paste0(substr(Trimestre, 14, 17), "-04-01"), NA_real_)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="3e trimestre", paste0(substr(Trimestre, 14, 17), "-07-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="4e trimestre", paste0(substr(Trimestre, 14, 17), "-10-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 13)=="1er trimestre", paste0(substr(Trimestre, 15, 18), "-01-01"), DATE)) |>
+  mutate(DATE = as.Date(DATE)) |>
+  mutate_at(vars(1:5), as.character) |>
+  pivot_longer(cols=c(2:5), names_to = "Composante", values_to = "value") |>
+  filter(Composante != "Tous") |>
+  mutate(value = gsub("\\s+", "", value)) |>
+  mutate(value = as.numeric(value)) |>
+  mutate(value = round(value/30.41,1)) |>
+  mutate(cat = "Inscrits")
+
+###Durée moyenne d'inscription des sortants
+url_dur_sortant <- "https://statistiques.pole-emploi.org/stmt/trsl?dd=d&fa=M&ld=0"
+# Effectuer une requête HTTP pour récupérer le contenu HTML de l'URL
+response_ds <- GET(url_dur_sortant)
+html_content_ds <- content(response_ds, as = "text")
+# Analyser le contenu HTML pour extraire les données pertinentes
+parsed_html_ds <- read_html(html_content_ds)
+pe_sortant_anciennete <- html_table(parsed_html_ds, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+
+pe_sortant_anciennete <- pe_sortant_anciennete |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="2e trimestre", paste0(substr(Trimestre, 14, 17), "-04-01"), NA_real_)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="3e trimestre", paste0(substr(Trimestre, 14, 17), "-07-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="4e trimestre", paste0(substr(Trimestre, 14, 17), "-10-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 13)=="1er trimestre", paste0(substr(Trimestre, 15, 18), "-01-01"), DATE)) |>
+  mutate(DATE = as.Date(DATE)) |>
+  mutate_at(vars(1:5), as.character) |>
+  pivot_longer(cols=c(2:5), names_to = "Composante", values_to = "value") |>
+  filter(Composante != "Tous") |>
+  mutate(value = gsub("\\s+", "", value)) |>
+  mutate(value = as.numeric(value)) |>
+  mutate(value = round(value/30.41,1)) |>
+  mutate(cat = "Sortants")
+
+pe_anciennete_age_total <- rbind(pe_age_anciennete,pe_sortant_anciennete)
+
+pe_anciennete_age_total$Composante <- forcats::fct_relevel(
+  pe_anciennete_age_total$Composante,
+  c("Moins de 25 ans", "De 25 à 49 ans", "50 ans ou plus"))
+```
+
+
+```{r,fig.dim = c(14, 9)}
+plot_dur_age <-ggplot(data = pe_anciennete_age_total,
+                      aes(x = DATE,
+                          y = value)) +
+  geom_line(aes(col = Composante), size =1.1) +
+  labs(title = "Ancienneté d'inscription à Pôle Emploi en catégorie A, B ou C", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", les séniors de plus de 50 ans inscrits à Pôle Emploi le sont depuis", valeur <- pe_anciennete_age_total %>% filter(DATE == max(DATE), Composante=="50 ans et plus", cat == "Inscrits") %>% pull(value) %>%  round(digits =1),  "mois en moyenne. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Durée d'inscription moyenne en mois", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) +ylim(0,NA) +facet_wrap(vars(cat))
+
+print(plot_dur_age)
+```
+
+# Les motifs d'entrée à Pôle Emploi au `r date_prov_litt`
+```{r,echo=FALSE, message=FALSE, results='hide'}
+#Entrées à Pole Emploi 
+url_entree <- "https://statistiques.pole-emploi.org/stmt/trsl?dd=e&fa=M&le=0"
+# Effectuer une requête HTTP pour récupérer le contenu HTML de l'URL
+response_e <- GET(url_entree)
+html_content_e <- content(response_e, as = "text")
+# Analyser le contenu HTML pour extraire les données pertinentes
+parsed_html_e <- read_html(html_content_e)
+pe_entree <- html_table(parsed_html_e, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+
+pe_entree <- pe_entree |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="2e trimestre", paste0(substr(Trimestre, 14, 17), "-04-01"), NA_real_)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="3e trimestre", paste0(substr(Trimestre, 14, 17), "-07-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="4e trimestre", paste0(substr(Trimestre, 14, 17), "-10-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 13)=="1er trimestre", paste0(substr(Trimestre, 15, 18), "-01-01"), DATE)) |>
+  mutate(DATE = as.Date(DATE)) |>
+  pivot_longer(cols=c(2:13), names_to = "Composante", values_to = "value") |>
+  select(-Trimestre) |>
+  filter(Composante != "Total") |>
+  mutate(value = gsub("\\s+", "", value)) |>
+  mutate(value = as.numeric(value)) |>
+  mutate(value=value/1000) |>
+  mutate(Composante = ifelse(Composante == "Autre licenciement", "Licenciement non économique", Composante)) |>
+  filter(Composante !="Autre motif") |>
+  filter(Composante != "Motif indéterminé") |>
+  filter(DATE >= as.Date('2010-01-01'))
+
+pe_entree$Composante <- forcats::fct_relevel(
+  pe_entree$Composante,
+  c("Retour d’inactivité", "Fin de contrat", "Réinscription rapide", 	
+"Rupture conventionnelle", 	
+"Autre licenciement", "Fin de mission d'intérim", "Première entrée sur le marché du travail", "Démission","Licenciement économique"
+  )
+)
+```
+
+
+```{r,fig.dim = c(16,16)}
+plot_entrees <-ggplot(data = pe_entree,
+                      aes(x = DATE,
+                          y = value)) +
+  geom_line(aes(col = Composante), size =1.1, show.legend = FALSE) +
+  labs(title = "Motifs d'entrée à Pôle Emploi en France Métropolitaine", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", ", valeur <- pe_entree %>% filter(DATE == max(DATE), Composante=="Fin de contrat") %>% pull(value) %>%  round(digits =1),  " milliers d'entrée à Pôle Emploi s'expliquent par la fin d'un contrat de travail. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Milliers", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  facet_wrap(vars(Composante),scales = "free")
+
+print(plot_entrees)
+```
+
+# Les motifs de sortie de Pôle Emploi au `r date_prov_litt`
+```{r,echo=FALSE, message=FALSE, results='hide'}
+#Sorties de Pole Emploi
+
+url_sortie <- "https://statistiques.pole-emploi.org/stmt/trsl?dd=s&fa=M&lf=0"
+response_s <- GET(url_sortie)
+html_content_s <- content(response_s, as = "text")
+parsed_html_s <- read_html(html_content_s)
+pe_sortie <- html_table(parsed_html_s, fill = TRUE)[[1]]  # On suppose que la première table contient les données
+
+pe_sortie <- pe_sortie |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="2e trimestre", paste0(substr(Trimestre, 14, 17), "-04-01"), NA_real_)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="3e trimestre", paste0(substr(Trimestre, 14, 17), "-07-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 12)=="4e trimestre", paste0(substr(Trimestre, 14, 17), "-10-01"), DATE)) |>
+  mutate(DATE = ifelse(substr(Trimestre, 1, 13)=="1er trimestre", paste0(substr(Trimestre, 15, 18), "-01-01"), DATE)) |>
+  mutate(DATE = as.Date(DATE)) |>
+  pivot_longer(cols=c(2:8), names_to = "Composante", values_to = "value") |>
+  select(-Trimestre) |>
+  filter(Composante != "Total") |>
+  mutate(value = gsub("\\s+", "", value)) |>
+  mutate(value = as.numeric(value)) |>
+  mutate(value=value/1000) |>
+  mutate(Composante = ifelse(Composante == "Cessation d'inscription pour défaut d'actualisation", "Défaut d'actualisation", Composante))
+
+pe_sortie$Composante <- forcats::fct_relevel(
+  pe_sortie$Composante,
+  c(
+    "Défaut d'actualisation", "Radiations administratives",
+    "Reprise d'emploi déclarée", "Entrée en stage",
+    "Maladie", "Dispensé de recherche d'emploi"
+  )
+)
+```
+
+
+```{r,fig.dim = c(16,16)}
+plot_sorties <-ggplot(data = pe_sortie,
+                    aes(x = DATE,
+                        y = value, fill=forcats::fct_relevel(Composante, c("Défaut d'actualisation", "Radiations administratives", "Reprise d'emploi déclarée", "Entrée en stage", "Maladie", "Dispensé de recherche d'emploi"), after = 1))) +
+  geom_line(aes(col = Composante), size =1.1, show.legend = FALSE) +
+  labs(title = "Motifs de sortie de Pôle Emploi en France Métropolitaine", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", ", valeur <- pe_sortie %>% filter(DATE == max(DATE), Composante=="Défaut d'actualisation") %>% pull(value) %>%  round(digits =1),  " milliers de sorties de Pôle Emploi s'expliquent par un défaut d'actualisation du dossier. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Milliers", x = "Année") +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+    facet_wrap(vars(Composante),scales = "free", nrow = 3)
+
+print(plot_sorties)
+
+```
+
+# La confrontation des sources administratives (Dares-Pôle Emploi) avec l'enquête Emploi (chômage BIT-Insee)
+
+```{r,echo=FALSE, message=FALSE, results='hide'}
+get_personnes_elargi = 
+  get_idbank_list("CHOMAGE-TRIM-NATIONAL") %>% 
+  filter(NATURE == "VALEUR_ABSOLUE") 
+
+idbank_chom_personnes = get_personnes_elargi %>% pull(idbank)
+
+chom_personnes = 
+  get_insee_idbank(idbank_chom_personnes) %>% 
+  split_title() %>% 
+  filter(OBS_STATUS == "A") %>% 
+  select(DATE, TIME_PERIOD, OBS_VALUE, TITLE_FR1, TITLE_FR2, TITLE_FR3, TITLE_FR4, TITLE_FR5) %>% 
+  filter(TITLE_FR3 == "France hors Mayotte") |>
+  mutate(age = str_extract(TITLE_FR2, "\\d{1,2} à \\d{1,2} ans")) |>
+  mutate(age = ifelse(TITLE_FR2 =="Ensemble des 50 ans ou plus (en milliers)", "50 ans ou plus", age)) |>
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Femmes"), "Femmes", "")) |>
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Hommes"), "Hommes", sexe)) |> 
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Ensemble"), "Ensemble", sexe)) |> 
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Total"), "Ensemble", sexe)) |>
+  mutate(age = ifelse(is.na(age), "Ensemble", age)) |>
+  mutate(sexe = ifelse(is.na(sexe), "Ensemble", sexe)) |>
+  mutate(OBS_VALUE = OBS_VALUE / 1000) |>
+  filter(TITLE_FR2 =="Ensemble (en milliers)") |>
+  group_by(DATE) |>
+  mutate(chom_bit_halo = sum(OBS_VALUE)) |>
+  ungroup() |>
+  filter(TITLE_FR1 == "Chômeurs au sens du BIT") |>
+  select(DATE, OBS_VALUE, chom_bit_halo) |>
+  rename(c("Chômeurs au sens du BIT" = "OBS_VALUE", "Chômage BIT et halo autour du chômage" = "chom_bit_halo")) |>
+  pivot_longer(cols=c(2:3), names_to = "Composante", values_to = "value") 
+
+cat_a <- filter(df_abc, TITLE_FR2 == "Catégorie A") |>
+  select(DATE, OBS_VALUE, TITLE_FR2) |>
+  rename(value = OBS_VALUE, Composante = TITLE_FR2) |>
+  mutate(Composante = ifelse(Composante == "Catégorie A", "Catégorie A de Pôle Emploi", Composante))
+
+pole_emploi_insee <- rbind(chom_personnes, cat_a) |> filter(DATE >= as.Date('2003-01-01'))
+
+pole_emploi_insee <- pole_emploi_insee |>
+  group_by(DATE) |>
+  mutate(ecart_cata_bit = value[Composante == "Catégorie A de Pôle Emploi"] - value[Composante == "Chômeurs au sens du BIT"]) |>
+  ungroup() |>
+  pivot_wider(names_from = Composante, values_from = value, id_cols = c(DATE, ecart_cata_bit)) |>
+  rename(cata_pe = 'Catégorie A de Pôle Emploi', halo_bit = "Chômage BIT et halo autour du chômage", bit = "Chômeurs au sens du BIT")
+
+
+
+```
+
+```{r, fig.dim=c(14,9)}
+plot_insee_dares <-ggplot(data = pole_emploi_insee,
+                    aes(x = DATE)) +
+  geom_line(aes(y=bit, color = "Chômeurs au sens du BIT"), size =1.1) +
+  geom_line(aes(y=halo_bit, color = "Chômeurs BIT et halo autour du chômage"), size =1.1) +
+  geom_line(aes(y=cata_pe, color = "Catégorie A de Pôle Emploi"), size =1.1) +
+  geom_col(aes(y=ecart_cata_bit, color = "Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee", fill = "Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee"), color = "black")+
+  labs(title = "Ecart entre les demandeurs d'emploi de Pôle Emploi et le chômage mesuré par l'Insee", 
+       
+       subtitle = paste0("Lecture : Au ",date_prov_litt, ", l'écart entre le nombre de catégories A mesurées par Pôle Emploi et le nombre de chômeur BIT mesuré par l'Insee est de ", valeur <- pole_emploi_insee %>% filter(DATE == max(DATE)) %>% pull(ecart_cata_bit) %>%  round(digits =1), " million d'individus. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ", date_prov_litt, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Millions", x = "Année") +
+  scale_colour_manual(values = c("Chômeurs au sens du BIT" = "#F8766D",  "Chômeurs BIT et halo autour du chômage"= "purple", "Catégorie A de Pôle Emploi"="#00B8E7"))+
+  scale_fill_manual(values = c("Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee" = "grey66")) +
+  #scale_fill_manual(values=c("Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee"="orange"))+
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  ylim(0,NA) +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+
+print(plot_insee_dares)
+```
+
