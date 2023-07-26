@@ -70,7 +70,7 @@ date_prov_litt <- "1er trimestre 2023"
 
 Ce rapport *RMarkdown* analyse les effectifs de demandeurs d'emploi à Pôle Emploi au `r date_prov_litt`. Les données sont produites par la Dares et Pôle Emploi à partir de sources administratives exhaustives. 
 
-**Les données sur les demandeurs d'emploi de Pôle Emploi ne doivent pas être confondues avec celles sur le chômage au sens du BIT produites par l'Insee**. Un autre rapport (consultable [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Conjoncture%20-%20comptes%20trimestriels/)) analyse les différents indicateurs du chômage au sens de l'Insee. 
+**Les données sur les demandeurs d'emploi de Pôle Emploi ne doivent pas être confondues avec celles sur le chômage au sens du BIT produites par l'Insee**. Un autre rapport (consultable [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/March%C3%A9%20du%20travail%20et%20ch%C3%B4mage/Ch%C3%B4mage%20BIT%2C%20halo%20et%20sous%20emploi%20-%20Enqu%C3%AAte%20Emploi/)) analyse les différents indicateurs du chômage au sens de l'Insee. 
 
 Dans un premier temps, le rapport présente le nombre de demandeurs d'emploi inscrits à Pôle Emploi par catégorie. Les catégorie A-B-C regroupent les inscrits tenus de chercher un emploi, alors que les catégories D et E regroupent les inscrits dispensés de recherche d'emploi. La catégorie A inclut uniquement les inscrits sans emploi, alors que les catégories B et C regroupent les inscrits en emploi à temps partiel (inférieur à 78 heures par mois pour la catégorie B, supérieur à 78 heures par mois pour la catégorie C). 
 
@@ -84,7 +84,7 @@ Le rapport se conclut avec une confrontation des différentes sources des demand
 
 Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format(Sys.time(), '%d %B %Y à %H heures et %M minutes')`. Les potentielles erreurs présentes dans ce document relèvent uniquement de la responsabilité de Statjunior.
 
-Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Conjoncture%20-%20comptes%20trimestriels/).
+Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Demandeurs%20d'emploi%20(P%C3%B4le%20Emploi)/).
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 list_idbank_pole_emploi_global = 
