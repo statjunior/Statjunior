@@ -1,6 +1,6 @@
 ---
 title: "Synthèse conjoncturelle des comptes de branche"
-subtitle: "Résultats provisoires des *Comptes Nationaux Trimestriels* au 1er trimestre 2023."
+subtitle: "Résultats provisoires des *Comptes Nationaux Trimestriels* au 2e trimestre 2023."
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -44,6 +44,7 @@ library(base)
 library(tidyr)
 library(cowplot)
 library(plotly)
+library(lubridate)
 
 conflict_prefer("rename", "dplyr")
 conflict_prefer("filter", "dplyr")
@@ -57,10 +58,11 @@ conflict_prefer("select", "dplyr")
 
 
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
-#Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (1er trimestre 2023)
-date_max_compte_prov <- "2023-01-01"
-date_prov_litt <- "1er trimestre 2023"
-date_prov_trim <- "T1-2023"
+#Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (2e trimestre 2023)
+date_max_compte_prov <- "2023-04-01"
+date_prov_litt <- "2e trimestre 2023"
+date_prov_trim <- "T2-2023"
+
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
 date_max_compte_def <- "2023-01-01"
 date_def_litt <- "1er trimestre 2023"
@@ -72,10 +74,15 @@ getwd()
 #  DATE ==max(full_tx_marge_2018t4$DATE[full_tx_marge_2018t4$DATE!=max(full_tx_marge_2018t4$DATE)])
 
 ####Date de la base 100 pour les graphiques en niveau 
+date_prec_prov <- as.Date(date_max_compte_prov) - months(3) 
+date_prec_prov <- substr(date_prec_prov, 1, 10) 
+
 scale_2019t4 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2019-10-01"]*100
 scale_2018t4 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2018-10-01"]*100
 scale_2000t1 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2000-01-01"]*100
 scale_annee_2019 <- function(x, na.rm = FALSE) x/((x[cnt_cb_complet[,1] == "2019-01-01"]+x[cnt_cb_complet[,1] == "2019-04-01"]+x[cnt_cb_complet[,1] == "2019-07-01"]+x[cnt_cb_complet[,1] == "2019-10-01"])/4)*100
+
+scale_trim <- function(x, na.rm = FALSE) x/x[full_va[,1] == as.character(date_prec_prov)]*100
 
 prov_detail <- ifelse(date_max_compte_def == date_max_compte_prov, "détaillés", "provisoires")
 
@@ -239,7 +246,7 @@ contrib_pib_eer <- filter(pib_2014_bis, TITLE_FR2 =="contrib_pib") |>
   ))
 
 contrib_pib_eer$Composante<- as.factor(contrib_pib_eer$Composante)
-contrib_pib_eer <- mutate(contrib_pib_eer, croissance_pib=round(croissance_pib,1))
+contrib_pib_eer <- mutate(contrib_pib_eer, croissance_pib=round(croissance_pib,2))
 var_label(contrib_pib_eer) <- list(
   croissance_pib = "Croissance du PIB",
   Composante = "Composante", 
@@ -904,7 +911,7 @@ plot_conso_menages_cnt <- ggplot(data=analyse_conso_menages_base2019, aes(x=DATE
   geom_line(aes(col = Composante), size =1.1)  +
   labs(title = "Evolution de la consommation énergétique et agro-alimentaire",
        
-       subtitle = paste("Lecture: Au",date_prov_litt, ", la consommation de produits agro-alimentaires",ifelse(valeur>100, "augmente", "recule"), "en volume de", ifelse(valeur>100, valeur-100, 100-valeur), "% par rapport à la moyenne de 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_prov_litt, ", la consommation de produits agro-alimentaires",ifelse(valeur>100, "augmente", "recule"), "en volume de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)), "% par rapport à la moyenne de 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Base 100 en 2019", x = "Année") +
   scale_color_manual(values = c("#00B8E7", "#C77CFF", "#F8766D"))+
@@ -1026,7 +1033,7 @@ plot_prod_travail_2019 <- ggplot(data = prod_travail_2019,
   geom_line(aes(y = prod_travail_marng, color = "Productivité horaire du travail (marchand non agricole)"), size = 1.1) +
   labs(title = "Valeur ajoutée et productivité du travail depuis la crise de la Covid", 
        
-       subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail", ifelse(valeur>100, "augmente", "recule"), "de", ifelse(valeur>100, valeur-100,100-valeur),"% par rapport au 4e trimestre 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail", ifelse(valeur>100, "augmente", "recule"), "de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)),"% par rapport au 4e trimestre 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Base 100 au 4e trimestre 2019", x = "Année") +
   scale_x_date(limits = as.Date(c("2019-10-01", date_max_compte_def))) + 
@@ -1060,7 +1067,7 @@ plot_prod_travail_tete_2019 <-ggplot(data = prod_travail_2019,
   geom_line(aes(y = prod_travail_marng, color = "Productivité horaire du travail (marchand non agricole)"), size = 1.1) +
   labs(title = "Productivité horaire et par tête du travail depuis la crise du Covid", 
        
-        subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail",ifelse(valeur>100, "augmente", "recule"),"de", ifelse(valeur>100, valeur-100, 100-valeur),"% par rapport au 4e trimestre 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+        subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail",ifelse(valeur>100, "augmente", "recule"),"de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)),"% par rapport au 4e trimestre 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Base 100 au 4e trimestre 2019", x = "Année") +
   scale_x_date(limits = as.Date(c("2000-01-01", date_max_compte_def))) + 
@@ -1122,7 +1129,7 @@ plot_masse_salariale<-ggplot(data = masse_salariale,
   #geom_line(aes(y = smb_tertiaire, color = "SMB Tertiaire"), size = 1) + 
   labs(title = "Evolution de la Masse salariale réelle et de l'emploi depuis 2017", 
        
-       subtitle = paste("Lecture: Au",date_def_litt, ", la masse salariale réelle des secteurs marchands non agricoles",ifelse(valeur>100, "augmente", "recule"),"de", ifelse(valeur>100, valeur-100, 100-valeur), "% par rapport au 2e trimestre 2017. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"), 
+       subtitle = paste("Lecture: Au",date_def_litt, ", la masse salariale réelle des secteurs marchands non agricoles",ifelse(valeur>100, "augmente", "recule"),"de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)), "% par rapport au 2e trimestre 2017. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"), 
        
        y = "Base 100 au 2e trimestre 2017", x = "Date") +
   scale_x_date(limits = as.Date(c("2017-04-01", date_max_compte_def))) + 
@@ -1166,7 +1173,7 @@ plot_vol_travail_prod <-ggplot(data = masse_salariale90,
   #geom_line(aes(y = smb_tertiaire, color = "SMB Tertiaire"), size = 1) + 
   labs(title = "Décomposition de la valeur ajoutée entre productivité horaire et volume global de travail depuis 1990", 
        
-       subtitle = paste("Lecture: Au",date_def_litt, ", la valeur ajoutée des secteurs marchands non agricoles", ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>100, valeur-100, 100-valeur), "% par rapport au 1er trimestre 1990. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"), 
+       subtitle = paste("Lecture: Au",date_def_litt, ", la valeur ajoutée des secteurs marchands non agricoles", ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)), "% par rapport au 1er trimestre 1990. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"), 
        
        y = "Base 100 au 1er trimestre 1990", x = "Date") +
   scale_x_date(limits = as.Date(c("1990-01-01", date_max_compte_def))) + 
@@ -1207,7 +1214,7 @@ plot_smpt_productivite <-ggplot(data = masse_salariale,
   #geom_line(aes(y = smb_tertiaire, color = "SMB Tertiaire"), size = 1) + 
   labs(title = "Evolution de la productivité du travail et du pouvoir d'achat du Salaire Moyen par Tête", 
 
-       subtitle = paste("Lecture: Au",date_def_litt, ", le pouvoir d'achat du salaire moyen par tête", ifelse(valeur>100, "progresse", "recule"), "de", ifelse(valeur>100, valeur-100, 100-valeur),"% (et la productivité par tête",ifelse(valeur>100, "progresse", "recule"), "de",ifelse(valeur2>100, valeur2-100, 100-valeur2), "% par rapport au 4e trimestre 2019. \nChamp : Secteurs marchands non agricoles \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_def_litt, ", le pouvoir d'achat du salaire moyen par tête", ifelse(valeur>100, "progresse", "recule"), "de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)),"% (et la productivité par tête",ifelse(valeur>100, "progresse", "recule"), "de",ifelse(valeur2>100, round(valeur2-100,2), round(100-valeur2,2)), "% par rapport au 4e trimestre 2019. \nChamp : Secteurs marchands non agricoles \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Base 100 au 1er trimestre 2000", x = "Date") +
   scale_x_date(limits = as.Date(c("2000-01-01", NA))) + 
@@ -1254,7 +1261,7 @@ va_term_L, va_com_L, va_service_trans_L, va_heb_L, va_infocom_L, va_fin_L, va_im
 
 full_va_2019 <- mutate_at(full_va, vars(-1), scale_2019t4)
 full_va_2019 <- mutate_at(full_va_2019, vars(-1), ~.-100) |>
-  filter(DATE ==max(DATE)) |>
+filter(DATE == max(DATE) | DATE==max(full_va_2019$DATE[full_va_2019$DATE!=max(full_va_2019$DATE)])) |>
   mutate(DATE = as.character(DATE))
 full_va_2019 <- pivot_longer(full_va_2019,cols=c(-1), names_to = "Composante", values_to = "value") |>
   mutate(Composante = case_when(
@@ -1294,7 +1301,7 @@ plot_va_sectorielle_2019t4 <-ggplot(data = full_va_2019,
   geom_col(position = "dodge") +
   labs(title = "Evolution de la Valeur Ajoutée par secteur depuis la crise du Covid", 
        
-       subtitle = paste("Lecture: Au",date_prov_litt, ", la valeur ajoutée des secteurs marchands non agricoles",ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>100, valeur-100, 100-valeur), "par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_prov_litt, ", la valeur ajoutée des secteurs marchands non agricoles",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>100, round(valeur,2), round(valeur,2)), "% par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Variation par rapport au T4-2019 (%)", x = "Secteur") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
@@ -1316,6 +1323,75 @@ plot_va_sectorielle_2019t4 <-ggplot(data = full_va_2019,
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
         axis.title.y = element_text(hjust = 0.5))
 plot_va_sectorielle_2019t4
+rm(valeur)
+```
+
+## Progression de la valeur ajoutée par rapport au dernier trimestre
+```{r, fig.dim=c(14,9)}
+full_va_trim <- mutate_at(full_va, vars(-1), scale_trim)
+full_va_trim <- mutate_at(full_va_trim, vars(-1), ~.-100) |>
+filter(DATE == max(DATE)) |>
+  mutate(DATE = as.character(DATE))
+full_va_trim <- pivot_longer(full_va_trim,cols=c(-1), names_to = "Composante", values_to = "value") |>
+  mutate(Composante = case_when(
+    Composante == "va_tot_L"~"Global",
+    Composante == "va_marng_L"~"Marchand non agricole",
+    Composante == "va_indus_L"~"Industrie",
+    Composante == "va_alim_L"~"Agro-alimentaire",
+    Composante == "va_energ_L"~"Energie, eau, déchets",
+    Composante == "va_raf_L"~"Cokéfaction-raffinage",
+    Composante == "va_info_L"~"Biens d'équipement",
+    Composante == "va_mat_trans_L"~"Matériels de transport",
+    Composante == "va_constr_L"~"Construction",
+    Composante == "va_term_L"~"Tertiaire marchand",
+    Composante == "va_com_L"~"Commerce",
+    Composante == "va_service_trans_L"~"Services de transport",
+    Composante == "va_heb_L"~"Hébergement-restauration",
+    Composante == "va_infocom_L"~"Info-communication",
+    Composante == "va_fin_L"~"Services financiers",
+    Composante == "va_imm_L"~"Services immobiliers",
+    Composante == "va_sciad_L"~"Services aux entreprises",
+    Composante == "va_ternm_L"~"Tertiaire non marchand",
+    Composante == "va_ag_L"~"Agriculture"
+    
+  ))
+
+###Graphique VA par rapport à trim
+valeur <- full_va_trim |> filter(DATE == max(DATE), Composante == "Marchand non agricole") |> pull(value) |> round(digits =1)
+
+plot_va_sectorielle_trim <-ggplot(data = full_va_trim,
+                               aes(x = forcats::fct_relevel(Composante, c("Global", "Marchand non agricole","Industrie","Agro-alimentaire",
+                                                                       "Energie, eau, déchets","Cokéfaction-raffinage","Biens d'équipement",
+                                                                           "Matériels de transport", "Construction",
+                                                                          "Tertiaire marchand", "Commerce",  "Services de transport",
+                                                                          "Hébergement-restauration","Info-communication","Services financiers",
+                                                                           "Services immobiliers","Services aux entreprises","Tertiaire non marchand","Agriculture"), after = 1),
+                                y = value, fill = DATE)) +
+  geom_col(position = "dodge") +
+  labs(title = "Evolution de la Valeur Ajoutée par secteur par rapport au trimestre précédent", 
+       
+       subtitle = paste("Lecture: Au",date_prov_litt, ", la valeur ajoutée des secteurs marchands non agricoles",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>100, round(valeur,2), round(valeur,2)), "% par rapport au trimestre précédent. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
+       
+       y = "Variation par rapport au T4-2019 (%)", x = "Secteur") +
+  #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 11,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+        legend.position="bottom",
+        plot.title.position ="plot",
+        axis.text.x = element_text(angle = 90),
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=12),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", face = "italic"),
+        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+        axis.title.y = element_text(hjust = 0.5))
+plot_va_sectorielle_trim
 rm(valeur)
 ```
 
@@ -1376,7 +1452,7 @@ plot_prod_travail_sectorielle_2019t4 <-ggplot(data = full_prod_travail_2019,
   geom_col(fill="#00B8E7") +
   labs(title = "Evolution de la Productivité horaire du travail par secteur depuis la crise du Covid", 
        
-       subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail des secteurs marchands non agricoles",ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>100, valeur-100, 100-valeur), "% par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire du travail des secteurs marchands non agricoles",ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>0, round(valeur,2), round(valeur,2)), "% par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Variation par rapport au T4-2019 (%)", x = "Secteur") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
@@ -1465,7 +1541,7 @@ plot_heures_travaillées_2019t4 <-ggplot(data = full_heures_2019,
   geom_col(fill="#F8766D") +
   labs(title = "Evolution du Volume d'heures travaillées par secteur depuis la crise du Covid", 
        
-          subtitle = paste("Lecture: Au",date_def_litt, ", le volume d'heures travaillées des secteurs marchands non agricoles",ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>100, valeur-100, 100-valeur), "% par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+          subtitle = paste("Lecture: Au",date_def_litt, ", le volume d'heures travaillées des secteurs marchands non agricoles",ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>0, round(valeur,2), round(valeur,2)), "% par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Variation par rapport au T4-2019 (%)", x = "Secteur") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
@@ -1531,7 +1607,7 @@ plot_va_prod_heures_2019t4 <-ggplot(data = full_va_prod_2019,
   geom_point(aes(y=value_prod_travail, color =  "Productivité horaire du travail"),size = 2) +
   labs(title = "Evolution de la Productivité horaire du travail par secteur depuis la crise du Covid", 
        
-             subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire des secteurs marchands non agricoles",ifelse(valeur>100, "progresse", "recule"),"de", ifelse(valeur>100, valeur-100, 100-valeur), "% par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+             subtitle = paste("Lecture: Au",date_def_litt, ", la productivité horaire des secteurs marchands non agricoles",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>100, round(valeur,2), round(valeur,2)), "% par rapport au T4-2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Variation par rapport au T4-2019 (%)", x = "Secteur") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
@@ -1662,9 +1738,9 @@ full_tx_marge <- full_tx_marge |>
   relocate(DATE, tx_marge_tot, tx_marge_marng, tx_marge_indus, tx_marge_alim, tx_marge_energ, tx_marge_raf, tx_marge_info, tx_marge_mat_trans, tx_marge_energ, tx_marge_constr, tx_marge_term, tx_marge_com, tx_marge_service_trans, tx_marge_heb, tx_marge_infocom, tx_marge_fin, tx_marge_imm, tx_marge_sciad, tx_marge_ternm, tx_marge_ag, .before = NULL)
 
 full_tx_marge_2018t4 <- mutate_at(full_tx_marge, vars(-1), ~.-(.[full_tx_marge[,1] == "2018-10-01"]+.[full_tx_marge[,1] == "2018-07-01"]+.[full_tx_marge[,1] == "2018-04-01"]+.[full_tx_marge[,1] == "2018-01-01"])/4) 
-full_tx_marge_2018t4 <-  filter(full_tx_marge_2018t4,DATE ==date_max_compte_def) |>
+full_tx_marge_2018t4 <-  filter(full_tx_marge_2018t4,DATE ==date_max_compte_def |DATE == as.Date(date_max_compte_def)-months(3)) |>
   ###Attention:bien spécifier le trimestre ici 
-  filter(DATE == min(DATE)) |>
+  #filter(DATE == min(DATE)) |>
   mutate(DATE = as.character(DATE)) 
 
 full_tx_marge_2018t4 <- pivot_longer(full_tx_marge_2018t4,cols=c(-1), names_to = "Composante", values_to = "value") |>
