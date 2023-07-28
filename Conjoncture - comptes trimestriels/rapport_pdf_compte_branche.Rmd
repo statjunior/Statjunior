@@ -978,6 +978,7 @@ plot_alim_trim <- ggplot(data=analyse_conso_alim_vol, aes(x=DATE, y=value, fill 
 plot_alim_trim
 ```
 
+
 \newpage 
 
 # Salaires, Masse salariale et Productivité du travail
@@ -1372,7 +1373,7 @@ plot_va_sectorielle_trim <-ggplot(data = full_va_trim,
        
        subtitle = paste("Lecture: Au",date_prov_litt, ", la valeur ajoutée des secteurs marchands non agricoles",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>100, round(valeur,2), round(valeur,2)), "% par rapport au trimestre précédent. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
        
-       y = "Variation par rapport au T4-2019 (%)", x = "Secteur") +
+       y = "Variation par rapport au trimestre précédent", x = "Secteur") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
                plot_title_size = 18,
