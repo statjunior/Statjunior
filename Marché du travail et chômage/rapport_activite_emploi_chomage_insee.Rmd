@@ -76,11 +76,13 @@ On présente également le nombre d'heures moyen hebdomadaire par emploi.
 
 Enfin, le rapport détaille les différentes catégories de contraintes d'emploi exprimées par les enquêtés. D'une part, les chômeurs au sens du BIT, et d'autre part les personnes dans le halo du chômage ou en situation de sous-emploi contraint. Pour cette dernière partie, le rapport présente à la fois les résultats en taux et en valeur absolue (nombre de personnes concernées). 
 
+Le rapport se conclut avec une confrontation des différentes sources des demandeurs d'emploi, à savoir les données administratives de Pôle Emploi présentées dans ce rapport avec les données d'enquête de l'Insee (mesurant le chômage BIT). On présente pour chaque trimestre l'écart entre le nombre de catégories A à Pôle Emploi et le nombre de chômeurs BIT mesurés par l'Insee. 
+
 Les graphiques peuvent être interprétés de manière structurelle (évolutions sur longue période du taux d'emploi des femmes ou des seniors par exemple), ou bien de manière conjoncturelle (variations d'un indicateur d'un trimestre à l'autre).
 
 Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format(Sys.time(), '%d %B %Y à %H heures et %M minutes')`. Les potentielles erreurs présentes dans ce document relèvent uniquement de la responsabilité de Statjunior.
 
-Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/March%C3%A9%20du%20travail%20et%20ch%C3%B4mage/).
+Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/blob/main/March%C3%A9%20du%20travail%20et%20ch%C3%B4mage/).
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 list_emploi_bit = 
@@ -668,7 +670,7 @@ plot_chom_bit_duree <-  ggplot(data=p_chom_bit, aes(x=DATE, y= OBS_VALUE)) +
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
-        axis.title.y = element_text(hjust = 0.5))
+        axis.title.y = element_text(hjust = 0.5)) +ylim(0,NA)
 print(plot_chom_bit_duree)
 ```
 
@@ -701,7 +703,7 @@ plot_chom_bit_age <-  ggplot(data=p_chom_age, aes(x=DATE, y= OBS_VALUE)) +
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
-        axis.title.y = element_text(hjust = 0.5))
+        axis.title.y = element_text(hjust = 0.5))+ylim(0,NA)
 print(plot_chom_bit_age)
 ```
 
@@ -762,7 +764,7 @@ plot_chom_elargi <-  ggplot(data=p_chom_elargi, aes(x=DATE, y= OBS_VALUE)) +
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
-        axis.title.y = element_text(hjust = 0.5))
+        axis.title.y = element_text(hjust = 0.5))+ylim(0,NA)
 print(plot_chom_elargi)
 
 ```
@@ -809,7 +811,7 @@ plot_alo_age <-  ggplot(data=p_alo_age, aes(x=DATE, y= OBS_VALUE)) +
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
-        axis.title.y = element_text(hjust = 0.5))
+        axis.title.y = element_text(hjust = 0.5)) +ylim(0,NA)
 print(plot_alo_age)
 ```
 
@@ -878,7 +880,10 @@ plot_personnes_chomage_halo <-  ggplot(data=decompo_chomage, aes(x=DATE, y= OBS_
        subtitle = paste0("Lecture: Au ", last_point, ", ", valeur <- decompo_chomage %>%
   filter(DATE == max(DATE)) %>%
   pull(sum)  %>%
-  round(digits = 1), " millions de personnes de plus de 15 ans sont au chômage ou dans le halo du chômage. \nChamp : France hors Mayotte \nSource : Insee - Enquête Emploi (Dernier point : ", last_point,"). \nCalculs et graphiques : @statjunior"),
+  round(digits = 1), " millions de personnes de plus de 15 ans sont au chômage ou dans le halo du chômage.", valeur2 <- decompo_chomage %>%
+  filter(DATE == max(DATE), title == "Chômeurs BIT") %>%
+  pull(OBS_VALUE)  %>%
+  round(digits = 1), " millions sont chômeurs au sens du BIT. \nChamp : France hors Mayotte \nSource : Insee - Enquête Emploi (Dernier point : ", last_point,"). \nCalculs et graphiques : @statjunior"),
   
        y = "Millions", x = "Date", fill='title') +
   #scale_color_manual(values = c("#333333"))
@@ -1060,7 +1065,8 @@ nb_ssemploi2 <- select(nb_ssemploi, -total_ssemploi)
 decompo_full <- rbind(decompo_chomage, nb_ssemploi2)
 decompo_full <- decompo_full |>
   group_by(DATE) |>
-  mutate(total = sum(OBS_VALUE))
+  mutate(nb_total = sum(OBS_VALUE)) |>
+  ungroup()
 
 plot_full_personnes_besoin_emploi <-  ggplot(data=decompo_full, aes(x=DATE, y= OBS_VALUE, fill = forcats::fct_relevel(title, c("Sous emploi: ayant involontairement travaillé moins que d'habitude", 
                                                                                                                                "Sous emploi: souhaite travailler davantage, disponible MAIS sans recherche", 
@@ -1074,7 +1080,7 @@ plot_full_personnes_besoin_emploi <-  ggplot(data=decompo_full, aes(x=DATE, y= O
        
        subtitle = paste0("Lecture: Au ", last_point, ", ",valeur <- decompo_full %>%
   filter(DATE == max(DATE)) %>%
-  pull(total)  %>%
+  pull(nb_total)  %>%
   round(digits = 1)," millions de personnes de plus de 15 ans souhaitent travailler ou travailler davantage. \nChamp : France hors Mayotte \nSource : Insee - Enquête Emploi (Dernier point : ", last_point,"). \nCalculs et graphiques : @statjunior"),
   
        y = "Millions", x = "Date", fill='title') +
@@ -1102,4 +1108,133 @@ plot_full_personnes_besoin_emploi <-  ggplot(data=decompo_full, aes(x=DATE, y= O
 print(plot_full_personnes_besoin_emploi)
 
 ```
+
+# La confrontation des sources administratives (Dares-Pôle Emploi) avec l'enquête Emploi (chômage BIT-Insee)
+
+```{r,echo=FALSE, message=FALSE, results='hide'}
+chom_personnes_bis = 
+  get_insee_idbank(idbank_chom_personnes) %>% 
+  split_title() %>% 
+  filter(OBS_STATUS == "A") %>% 
+  select(DATE, TIME_PERIOD, OBS_VALUE, TITLE_FR1, TITLE_FR2, TITLE_FR3, TITLE_FR4, TITLE_FR5) %>% 
+  filter(TITLE_FR3 == "France hors Mayotte") |>
+  mutate(age = str_extract(TITLE_FR2, "\\d{1,2} à \\d{1,2} ans")) |>
+  mutate(age = ifelse(TITLE_FR2 =="Ensemble des 50 ans ou plus (en milliers)", "50 ans ou plus", age)) |>
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Femmes"), "Femmes", "")) |>
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Hommes"), "Hommes", sexe)) |> 
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Ensemble"), "Ensemble", sexe)) |> 
+  mutate(sexe = if_else(str_detect(TITLE_FR2, "Total"), "Ensemble", sexe)) |>
+  mutate(age = ifelse(is.na(age), "Ensemble", age)) |>
+  mutate(sexe = ifelse(is.na(sexe), "Ensemble", sexe)) |>
+  mutate(OBS_VALUE = OBS_VALUE / 1000) |>
+  filter(TITLE_FR2 =="Ensemble (en milliers)") |>
+  group_by(DATE) |>
+  mutate(chom_bit_halo = sum(OBS_VALUE)) |>
+  ungroup() |>
+  filter(TITLE_FR1 == "Chômeurs au sens du BIT") |>
+  select(DATE, OBS_VALUE, chom_bit_halo) |>
+  rename(c("Chômeurs au sens du BIT" = "OBS_VALUE", "Chômage BIT et halo autour du chômage" = "chom_bit_halo")) |>
+  pivot_longer(cols=c(2:3), names_to = "Composante", values_to = "value") 
+
+list_idbank_pole_emploi_global = 
+  get_idbank_list("DEMANDES-EMPLOIS-NATIONALES") %>% 
+  filter(CORRECTION_label_fr == "Corrigé des variations saisonnières et du nombre de jours ouvrables") %>% 
+  filter(REF_AREA_label_fr == "France hors Mayotte" | REF_AREA_label_fr == "France métropolitaine" | REF_AREA_label_fr == "France") %>% 
+  filter(SERIE_ARRETEE_label_fr == "non") %>% 
+  filter(SEXE_label_fr == "Ensemble" | SEXE_label_fr == "Sans objet")
+
+###Niveau global des demandeurs d'emploi
+poleemploi_global = list_idbank_pole_emploi_global %>% pull(idbank)
+
+chom_pol_emploi_global =get_insee_idbank(poleemploi_global) %>% 
+  split_title() %>% 
+  filter(TITLE_FR3 != "De moins de 25 ans") %>% 
+  filter(TITLE_FR3 != "De 25 à 49 ans") %>% 
+  filter(TITLE_FR3 != "De 50 ans et plus")  %>% 
+  filter(TITLE_FR3 != "Ancienneté sur les listes : moins d'un an") %>% 
+  filter(TITLE_FR3 != "Ancienneté sur les listes : plus d'un an") %>% 
+  filter(TITLE_FR3 != "Durée d’un an ou plus") %>% 
+  filter(TITLE_FR3 != "Durée de deux ans ou plus") %>% 
+  filter(TITLE_FR3 != "50 ans ou plus") %>% 
+  filter(TITLE_FR3 != "25 à 49 ans") %>% 
+  filter(TITLE_FR3 != "Moins de 25 ans") %>% 
+  filter(TITLE_FR1 == "Nombre moyen de demandeurs d'emploi inscrits sur le trimestre à Pôle emploi" | (TITLE_FR2 == "France hors Mayotte" & TITLE_FR4 == "A")) |>
+  mutate(OBS_VALUE = ifelse(TITLE_FR2=="France hors Mayotte", OBS_VALUE/1000, OBS_VALUE)) %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR2 == "France hors Mayotte", TITLE_FR2, TITLE_FR4)) %>% 
+  mutate(TITLE_FR2 = ifelse(TITLE_FR2 == "France hors Mayotte", "Catégorie A", TITLE_FR2)) %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR4 == "Série CVS-CJO", TITLE_FR3, TITLE_FR4)) %>% 
+  mutate(TITLE_FR4 = ifelse(TITLE_FR4 == "France", "France hors Mayotte", TITLE_FR4)) %>% 
+  mutate(TITLE_FR2 = ifelse(TITLE_FR2 == "Catégories A, B, C, D et E (ensemble des catégories)", "Ensemble des catégories", TITLE_FR2)) %>% 
+  select(DATE, OBS_VALUE, TITLE_FR2, TITLE_FR4) %>% 
+  filter(DATE >= as.Date('1996-01-01')) %>% 
+  mutate(OBS_VALUE = OBS_VALUE/1000)
+
+df_abc <- filter(chom_pol_emploi_global, (TITLE_FR2 == "Catégorie A" | TITLE_FR2 == "Catégories A, B et C") & TITLE_FR4 == "France hors Mayotte") |>
+  select(-TITLE_FR4)
+
+cat_a <- filter(df_abc, TITLE_FR2 == "Catégorie A") |>
+  select(DATE, OBS_VALUE, TITLE_FR2) |>
+  rename(value = OBS_VALUE, Composante = TITLE_FR2) |>
+  mutate(Composante = ifelse(Composante == "Catégorie A", "Catégorie A de Pôle Emploi", Composante))
+
+pole_emploi_insee <- rbind(chom_personnes_bis, cat_a) |> filter(DATE >= as.Date('2003-01-01')) |>
+  mutate(count = 1) |>
+  group_by(DATE) |>
+  mutate(sum = sum(count)) |>
+  filter(sum==3) |>
+  select(-sum, -count)
+
+pole_emploi_insee <- pole_emploi_insee |>
+  group_by(DATE) |>
+  mutate(ecart_cata_bit = value[Composante == "Catégorie A de Pôle Emploi"] - value[Composante == "Chômeurs au sens du BIT"]) |>
+  ungroup() |>
+  pivot_wider(names_from = Composante, values_from = value, id_cols = c(DATE, ecart_cata_bit)) |>
+  rename(cata_pe = 'Catégorie A de Pôle Emploi', halo_bit = "Chômage BIT et halo autour du chômage", bit = "Chômeurs au sens du BIT") |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-01-01", "1er trimestre", NA)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-04-01", "2e trimestre", trim)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-07-01", "3e trimestre", trim)) |>
+  mutate(trim = ifelse(substr(DATE, 5, 11) == "-10-01", "4e trimestre", trim)) |>
+  mutate(trim = paste(trim, substr(DATE, 1, 4)))
+
+date_admin <- pole_emploi_insee |> filter(DATE == max(DATE)) |> pull(trim)
+
+```
+
+```{r, fig.dim = c(14,9)}
+plot_insee_dares <-ggplot(data = pole_emploi_insee,
+                    aes(x = DATE)) +
+  geom_line(aes(y=bit, color = "Chômeurs au sens du BIT"), size =1.1) +
+  geom_line(aes(y=halo_bit, color = "Chômeurs BIT et halo autour du chômage"), size =1.1) +
+  geom_line(aes(y=cata_pe, color = "Catégorie A de Pôle Emploi"), size =1.1) +
+  geom_col(aes(y=ecart_cata_bit, color = "Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee", fill = "Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee"), color = "black")+
+  labs(title = "Ecart entre les demandeurs d'emploi de Pôle Emploi et le chômage mesuré par l'Insee", 
+       
+       subtitle = paste0("Lecture : Au ",date_admin, ", l'écart entre le nombre de catégories A mesurées par Pôle Emploi et le nombre de chômeur BIT mesuré par l'Insee est de ", valeur <- pole_emploi_insee %>% filter(DATE == max(DATE)) %>% pull(ecart_cata_bit) %>%  round(digits =1), " million d'individus. \nChamp : France métropolitaine \nSource : Pôle Emploi-Dares (Données CVS-CJO ; Dernier point : ",date_admin, ") \nCalculs et graphiques : @statjunior"), 
+       
+       y = "Millions", x = "Année") +
+  scale_colour_manual(values = c("Chômeurs au sens du BIT" = "#F8766D",  "Chômeurs BIT et halo autour du chômage"= "purple", "Catégorie A de Pôle Emploi"="#00B8E7"))+
+  scale_fill_manual(values = c("Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee" = "grey66")) +
+  #scale_fill_manual(values=c("Ecart Cat. A Pôle Emploi VS Chômage BIT/Insee"="orange"))+
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+    legend.position="bottom",
+    plot.title.position ="plot",
+    legend.title = element_text(size=0), 
+    legend.text = element_text(size=12),
+    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+    plot.subtitle = element_text(color = "#333333", face = "italic"),
+    axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+    axis.title.y = element_text(hjust = 0.5)) + 
+  ylim(0,NA) +
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+
+print(plot_insee_dares)
+```
+
 
