@@ -36,6 +36,7 @@ library(lubridate)
 library(conflicted)
 library(base)
 library(tidyr)
+library(cowplot)
 conflict_prefer("rename", "dplyr")
 conflict_prefer("filter", "dplyr")
 conflict_prefer("mutate", "dplyr")
@@ -46,6 +47,7 @@ conflict_prefer("summarise", "dplyr")
 conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
+#0) Paramètre à fixer 
 
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Inflation")
 getwd()
@@ -226,16 +228,25 @@ plot_contrib_ipc <-  ggplot(data=gliss_composante_ipc , aes(x=DATE, y= contrib_g
   geom_line(aes(y = gliss_ipc, color =  "IPC")) + geom_point(aes(y = gliss_ipc, color =  "IPC")) +
   geom_line(aes(y = gliss_annuel_isj, color = "Indice sous-jacent"), type = "twodashed") +
   labs(title = "Contribution des postes de consommation au glissement annuel de l'IPC", 
-       subtitle = "Lecture : Au mois de juin 2023, l'alimentation contribue pour 2,2 points au glissement annuel de l'inflation (+4,5 %)  \nSource : Insee \nCalculs et graphiques : @statjunior", 
+       subtitle = "Lecture : Au mois de juillet 2023, l'alimentation contribue pour 2 points au glissement annuel de l'inflation (+4,3 %)  \nSource : Insee \nCalculs et graphiques : @statjunior", 
        y = "Pourcentage d'inflation (%)", x = "Mois", fill='Composante') +
   #scale_color_manual(values = c("#333333"))
-  theme_grey()+
-  theme(legend.position="bottom",
-        plot.title = element_text(color = "#333333", size = 16, face = "bold"),
-        plot.subtitle = element_text(color = "#333333", size = 12, face = "italic"),
-        legend.title = element_text(size=12), 
-        legend.text = element_text(size=12)
-  ) +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+        legend.position="bottom",
+        plot.title.position ="plot",
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=12),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", face = "italic"),
+        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+        axis.title.y = element_text(hjust = 0.5))+
    scale_colour_manual(values = c("IPC" = "black", "Indice sous-jacent" = "red"))+
   scale_x_date(limits = as.Date(c("2019-12-01", NA))) +
   ylim(-1.5,7) +
@@ -251,18 +262,27 @@ print(plot_contrib_ipc)
 plot_ipc2 <- ggplot(data=analyse_ipc2, aes(x=DATE, y=value, fill = Composante)) +
   geom_line(aes(col = Composante), size =1.1)  +
   labs(title = "Evolution des composantes de l'inflation depuis juin 2021", 
-      subtitle = "Lecture : Au mois de juin 2023, les prix alimentaires ont augmenté de 20 % par rapport à juin 2021. \nSource : Insee (Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
+      subtitle = "Lecture : Au mois de juillet 2023, les prix alimentaires ont augmenté de 20 % par rapport à juin 2021. \nSource : Insee (Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
       y = "Base 100 en juin 2021", x = "Mois") +
   scale_color_manual(values = c("red", "#C77CFF", "blue", "#00BA38",  "orange",  "#D39200"))+
   geom_line(data = filter(analyse_ipc2, Composante == "Ensemble"), size = 1.5, color = "blue") +
   scale_linetype_manual(values=c("solid", "solid","twodashed","solid","solid","solid"))+
-  theme_grey()+
-  theme(legend.position="bottom",
-    plot.title = element_text(color = "#333333", size = 18, face = "bold"),
-    legend.title = element_text(size=9), 
-    legend.text = element_text(size=12),
-    plot.subtitle = element_text(color = "#333333", face = "italic")
-  )
+ theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+        legend.position="bottom",
+        plot.title.position ="plot",
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=12),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", face = "italic"),
+        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+        axis.title.y = element_text(hjust = 0.5))
 print(plot_ipc2)
 ```
 

@@ -46,22 +46,30 @@ conflict_prefer("select", "dplyr")
 
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
 getwd()
+
+date_max_compte_def <- "2023-01-01"
+date_def_litt <- "1er trimestre 2023"
+date_def_trim <- "T1-2023"
 ```
 
 
 # Présentation
 
-Ce rapport *RMarkdown* présente les résultats détaillés des comptes des secteurs institutionnels (ménages, entreprises, administrations publiques, reste du monde). 
+Ce rapport *RMarkdown* présente les résultats détaillés des comptes des secteurs institutionnels (ménages, sociétés non financières, administrations publiques, reste du monde) au `r date_def_litt`. 
 
 Le rapport présente successivement les grands indicateurs macroéconomiques à retenir pour chaque agent économique. 
 
 Pour les ménages, on présente d'abord le revenu disponible brut et les prix à la consommation en comptabilité nationale afin d'en déduire le pouvoir d'achat des ménages. Le pouvoir d'achat des ménages est un indicateur macroéconomique qui ne tient pas compte de la taille des ménages et des économies d'échelle. C'est pourquoi on présente également le pouvoir d'achat par unité de consommation (UC). Le pouvoir d'achat des ménages par UC tient compte de la croissance de la population et des économies ou d'échelle liées à la vie sous un même toit. Enfin, on présente les contributions à l'évolution du pouvoir d'achat afin de distinguer une variation liée aux revenus du travail, à la fiscalité, aux prestations ou aux revenus du capital. 
 
-Pour les entreprises, on s'intéresse principalement aux sociétés non financières (SNF). On présente tout d'abord leur taux de marge et leur taux d'investissement sur longue période. Puis, on décompose les contributions de l'évolution du taux de marge depuis 2018 (on retient l'année 2018 car l'année 2019 est biaisée par la baisse de CICE). 
+Pour les entreprises, on s'intéresse au bilan des sociétés non financières (SNF). On présente tout d'abord leur taux de marge et leur taux d'investissement sur longue période. Puis, on décompose les contributions de l'évolution du taux de marge depuis 2018 (on retient l'année 2018 car l'année 2019 est biaisée par la baisse de CICE). 
 
 On s'intéresse ensuite aux comptes des administrations publiques (APU). On présente l'évolution des recettes et des dépenses publiques sur longue période. On distingue ensuite l'évolution des dépenses par grande composante. Enfin, on présente l'évolution du déficit public sur longue période ainsi que la charge d'intérêt de la dette. 
 
-Enfin, on présente la situation de financement de l'économie française vis à vis du reste du monde. 
+Enfin, on présente la situation de financement de l'économie française vis à vis du reste du monde.
+
+Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format(Sys.time(), '%d %B %Y à %H heures et %M minutes')`. Les potentielles erreurs présentes dans ce document relèvent uniquement de la responsabilité de Statjunior.
+
+Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Conjoncture%20-%20comptes%20trimestriels/).
 
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
@@ -857,7 +865,7 @@ plot_investissement_apu_pib <- ggplot(data = recette_apu,
 
 plot_decompo_depenses <- plot_grid(plot_dep_fonctionnement_apu_pib, plot_subventions_apu_pib,  
                                    plot_transferts_sociaux_nature_pib, plot_autres_transferts_pib, 
-                                   plot_investissement_apu_pib, plot_interet_verses_apu_pib, ncol = 2, nrow = 3)
+                                   plot_investissement_apu_pib, plot_interet_verses_apu_pib, ncol = 3, nrow = 2)
 print(plot_decompo_depenses)
 
 ```

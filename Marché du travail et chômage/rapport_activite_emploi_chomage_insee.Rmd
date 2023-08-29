@@ -735,7 +735,12 @@ p_chom_elargi <- filter(chom_elargi, TITLE_FR1 == "Part des chômeurs parmi les 
     TITLE_FR1 == "Part des chômeurs parmi les participants au marché du travail (emploi, chômage, halo)"~"Chômage BIT", 
     TITLE_FR1 == "Part des personnes au chômage ou dans le halo parmi les participants (emploi, chômage, halo) au marché du travail"~"Chômage + halo du chomage", 
     TITLE_FR1 == "Part des personnes contraintes sur leur offre de travail (halo, chômage, sous-emploi) parmi les participants au marché du travail (emploi, chômage, halo)"~"Chômage + halo du chomage + sous-emploi"
-  ))
+  )) |>
+  group_by(TITLE_FR1) |>
+  arrange(DATE) |>
+  mutate(gliss_annuel = ((OBS_VALUE/lag(OBS_VALUE, 4))-1)*100) |>
+  mutate(var_trim = ((OBS_VALUE/lag(OBS_VALUE, 1))-1)*100) |>
+  ungroup()
 
 ####Plot contraintes sur l'offre de travail (chomage BIT + halo + sous-emploi)
 plot_chom_elargi <-  ggplot(data=p_chom_elargi, aes(x=DATE, y= OBS_VALUE)) +
@@ -952,7 +957,7 @@ print(plot_part_chomage_halo)
 
 ## Nombre de personnes dans le halo du chômage
 
-```{r, fig.dim = c(14, 9)}
+```{r, fig.dim = c(14, 8)}
 decompo_halo <- filter(decompo_chomage, title!="Chômeurs BIT") |>
   group_by(DATE)|>
   mutate(total_halo = sum(OBS_VALUE)) |>
@@ -963,7 +968,7 @@ plot_personnes_halo <-  ggplot(data=decompo_halo, aes(x=DATE, y= OBS_VALUE, fill
                                                                                                                             "Halo : pas disponible immédiatement"
                                                                                                                         )))) +
   geom_col()+
-  labs(title = "Nombre de personnes dans le halo du chômage", 
+  labs(title = "Nombres de personnes dans le halo autour du chômage par catégorie", 
        
              subtitle = paste0("Lecture: Au ", last_point, ", ",valeur <- decompo_halo %>%
   filter(DATE == max(DATE)) %>%
@@ -995,6 +1000,45 @@ plot_personnes_halo <-  ggplot(data=decompo_halo, aes(x=DATE, y= OBS_VALUE, fill
 print(plot_personnes_halo)
 ```
 
+## Part de chaque catégorie du halo autour du chômage 
+```{r, fig.dim = c(14,8)}
+plot_part_halo <-  ggplot(data=decompo_halo, aes(x=DATE, y= OBS_VALUE, fill = forcats::fct_relevel(title, c("Halo : pas de recherche active et pas disponible immédiatement", 
+                                                                                                                            "Halo : pas de recherche active d'emploi",
+                                                                                                                            "Halo : pas disponible immédiatement"
+                                                                                                                        )))) +
+  geom_col(position = "fill")+
+  labs(title = "Part de chaque catégorie du halo autour du chômage", 
+       
+             subtitle = paste0("Lecture: Au ", last_point, ", ",valeur <- decompo_halo %>%
+  filter(DATE == max(DATE)) %>%
+  pull(total_halo)  %>%
+  round(digits = 1)," millions de personnes de plus de 15 ans sont dans le halo du chômage. \nChamp : France hors Mayotte \nSource : Insee - Enquête Emploi (Dernier point : ", last_point,"). \nCalculs et graphiques : @statjunior"),
+  
+       y = "Pourcentage (%)", x = "Date", fill='title') +
+  #scale_color_manual(values = c("#333333"))
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+        legend.position="bottom",
+        plot.title.position ="plot",
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=12),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", face = "italic"),
+        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+        axis.title.y = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = c("#99CCFF", "#00B8E7", "#3333FF")) +
+  scale_x_date(limits = as.Date(c("2003-01-01", NA)))  + 
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
+
+print(plot_part_halo)
+
+```
 
 ## Nombre de personnes en sous-emploi
 

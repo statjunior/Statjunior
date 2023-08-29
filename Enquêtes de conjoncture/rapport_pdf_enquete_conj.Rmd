@@ -1,6 +1,6 @@
 ---
 title: "Enquêtes de conjoncture auprès des entreprises"
-subtitle: "Résultats au mois de juillet 2023"
+subtitle: "Résultats au mois d'août 2023"
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -56,8 +56,8 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 ###Paramètres à fixer 
-point_max <- "2023-07-01"
-point_max_litt <- "juillet 2023"
+point_max <- "2023-08-01"
+point_max_litt <- "août 2023"
 
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Enquêtes de conjoncture/")
 ```

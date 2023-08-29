@@ -144,7 +144,7 @@
 \subtitle{Résultats provisoires des \emph{Comptes Nationaux
 Trimestriels} au 2e trimestre 2023.}
 \author{@statjunior}
-\date{28 juillet 2023}
+\date{20 août 2023}
 
 
 
@@ -237,7 +237,7 @@ Trimestriels} au 2e trimestre 2023.}
 \usepackage{titling}
 \title{Synthèse conjoncturelle des comptes de branche}
 \author{@statjunior}
-\date{28 juillet 2023}
+\date{20 août 2023}
 
 %
 % tables
@@ -272,7 +272,7 @@ Trimestriels} au 2e trimestre 2023.}
 %%
 \begin{titlepage}
 \newgeometry{left=6cm}
-\definecolor{titlepage-color}{HTML}{764388}
+\definecolor{titlepage-color}{HTML}{E60E40}
 \newpagecolor{titlepage-color}\afterpage{\restorepagecolor}
 \newcommand{\colorRule}[3][black]{\textcolor[HTML]{#1}{\rule{#2}{#3}}}
 \begin{flushleft}
@@ -297,7 +297,7 @@ Trimestriels} au 2e trimestre 2023.}}
 }
 
 
-\textsf{28 juillet 2023}
+\textsf{20 août 2023}
 \end{flushleft}
 \end{titlepage}
 \restoregeometry
@@ -314,10 +314,10 @@ Trimestriels} au 2e trimestre 2023.}}
 \section{Présentation}\label{pruxe9sentation}}
 
 Ce rapport \emph{RMarkdown} présente les résultats provisoires des
-comptes de branche au 1er trimestre 2023. On présente les grands
-agrégats économiques de la production (PIB) et divers indicateurs
-relatifs à la production (productivité du travail, salaire moyen par
-tête, taux de marge \ldots).
+comptes de branche au 2e trimestre 2023. On présente les grands agrégats
+économiques de la production (PIB) et divers indicateurs relatifs à la
+production (productivité du travail, salaire moyen par tête, taux de
+marge \ldots).
 
 Dans un premier temps, on s'intéresse à la croissance trimestrielle du
 PIB. On constate les contributions à l'évolution du PIB par composante
@@ -345,7 +345,7 @@ secteurs énergétiques dont les profits ont considérablement augmenté
 depuis 2021.
 
 Ce rapport a été compilé automatiquement avec le logiciel \texttt{R}, le
-28 juillet 2023 à 10 heures et 15 minutes. Les potentielles erreurs
+20 août 2023 à 12 heures et 04 minutes. Les potentielles erreurs
 présentes dans ce document relèvent uniquement de la responsabilité de
 Statjunior.
 
@@ -371,17 +371,45 @@ T4-2019}\label{evolution-des-composantes-du-pib-en-volume-par-rapport-au-t4-2019
 
 \includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-3-1.pdf}
 
+\hypertarget{valeur-ajoutuxe9e-par-branche-depuis-fin-2019}{%
+\subsection{Valeur ajoutée par branche depuis fin
+2019}\label{valeur-ajoutuxe9e-par-branche-depuis-fin-2019}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\hypertarget{progression-de-la-valeur-ajoutuxe9e-par-rapport-au-dernier-trimestre}{%
+\subsection{Progression de la valeur ajoutée par rapport au dernier
+trimestre}\label{progression-de-la-valeur-ajoutuxe9e-par-rapport-au-dernier-trimestre}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\hypertarget{evolution-du-prix-des-composantes-du-pib}{%
+\section{Evolution du prix des composantes du
+PIB}\label{evolution-du-prix-des-composantes-du-pib}}
+
 \hypertarget{inflation-des-composantes-du-pib-au-dernier-trimestre-connu}{%
 \subsection{Inflation des composantes du PIB au dernier trimestre
 connu}\label{inflation-des-composantes-du-pib-au-dernier-trimestre-connu}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-4-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-6-1.pdf}
 
 \hypertarget{prix-des-composantes-du-pib-depuis-la-fin-2019}{%
 \subsection{Prix des composantes du PIB depuis la fin
 2019}\label{prix-des-composantes-du-pib-depuis-la-fin-2019}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-5-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+\hypertarget{evolution-des-prix-de-production-par-branche-depuis-2019}{%
+\subsection{Evolution des prix de production par branche depuis
+2019}\label{evolution-des-prix-de-production-par-branche-depuis-2019}}
+
+\hypertarget{evolution-des-prix-de-valeur-ajoutuxe9e-par-branche-depuis-2019}{%
+\subsection{Evolution des prix de valeur ajoutée par branche depuis
+2019}\label{evolution-des-prix-de-valeur-ajoutuxe9e-par-branche-depuis-2019}}
+
+\hypertarget{evolution-des-prix-de-consommation-par-branche-depuis-2019}{%
+\subsection{Evolution des prix de consommation par branche depuis
+2019}\label{evolution-des-prix-de-consommation-par-branche-depuis-2019}}
 
 \newpage
 
@@ -389,26 +417,55 @@ connu}\label{inflation-des-composantes-du-pib-au-dernier-trimestre-connu}}
 \section{Solde des échanges extérieurs de la
 France}\label{solde-des-uxe9changes-extuxe9rieurs-de-la-france}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-6-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-8-1.pdf}
 
 \newpage
 
-\hypertarget{consommation}{%
-\section{Consommation}\label{consommation}}
+\hypertarget{consommation-des-muxe9nages}{%
+\section{Consommation des ménages}\label{consommation-des-muxe9nages}}
+
+\hypertarget{consommation-des-muxe9nages-par-branche-depuis-2019}{%
+\subsection{Consommation des ménages par branche depuis
+2019}\label{consommation-des-muxe9nages-par-branche-depuis-2019}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\hypertarget{consommation-par-branche-par-rapport-au-dernier-trimestre-connu}{%
+\subsection{Consommation par branche par rapport au dernier trimestre
+connu}\label{consommation-par-branche-par-rapport-au-dernier-trimestre-connu}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-11-1.pdf}
 
 \hypertarget{consommation-uxe9nerguxe9tique-et-agro-alimentaire-en-volume-depuis-fin-2019}{%
 \subsection{Consommation énergétique et agro-alimentaire en volume
 depuis fin
 2019}\label{consommation-uxe9nerguxe9tique-et-agro-alimentaire-en-volume-depuis-fin-2019}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-8-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-12-1.pdf}
 
 \hypertarget{evolution-sur-longue-puxe9riode-de-la-consommation-alimentaire-en-volume}{%
 \subsection{Evolution sur longue période de la consommation alimentaire
 en
 volume}\label{evolution-sur-longue-puxe9riode-de-la-consommation-alimentaire-en-volume}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\newpage
+
+\hypertarget{investissement}{%
+\section{Investissement}\label{investissement}}
+
+\hypertarget{investissement-par-branche-par-rapport-uxe0-2019}{%
+\subsection{Investissement par branche par rapport à
+2019}\label{investissement-par-branche-par-rapport-uxe0-2019}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-15-1.pdf}
+
+\hypertarget{investissement-par-rapport-au-dernier-trimestre-connu}{%
+\subsection{Investissement par rapport au dernier trimestre
+connu}\label{investissement-par-rapport-au-dernier-trimestre-connu}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-16-1.pdf}
 
 \newpage
 
@@ -421,77 +478,61 @@ travail}\label{salaires-masse-salariale-et-productivituxe9-du-travail}}
 travail depuis
 2000}\label{evolution-de-la-valeur-ajoutuxe9e-et-de-la-productivituxe9-du-travail-depuis-2000}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-10-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-17-1.pdf}
 
 \hypertarget{evolution-de-la-valeur-ajoutuxe9e-et-de-la-productivituxe9-du-travail-depuis-2019}{%
 \subsection{Evolution de la valeur ajoutée et de la productivité du
 travail depuis
 2019}\label{evolution-de-la-valeur-ajoutuxe9e-et-de-la-productivituxe9-du-travail-depuis-2019}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-11-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-18-1.pdf}
 
 \hypertarget{evolution-de-la-productivituxe9-par-tuxeate-et-de-la-productivituxe9-apparente-du-travail-depuis-2019}{%
 \subsection{Evolution de la Productivité par Tête et de la Productivité
 apparente du travail depuis
 2019}\label{evolution-de-la-productivituxe9-par-tuxeate-et-de-la-productivituxe9-apparente-du-travail-depuis-2019}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-12-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-19-1.pdf}
 
 \hypertarget{evolution-de-la-masse-salariale-ruxe9elle-et-de-lemploi-depuis-2017}{%
 \subsection{Evolution de la masse salariale réelle et de l'emploi depuis
 2017}\label{evolution-de-la-masse-salariale-ruxe9elle-et-de-lemploi-depuis-2017}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-13-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-20-1.pdf}
 
 \hypertarget{volume-de-travail-global-et-productivituxe9-du-travail-depuis-1990}{%
 \subsection{Volume de travail global et productivité du travail depuis
 1990}\label{volume-de-travail-global-et-productivituxe9-du-travail-depuis-1990}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-14-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-21-1.pdf}
 
 \hypertarget{evolution-du-salaire-moyen-par-tuxeate-et-de-la-productivituxe9-par-tuxeate-depuis-1990}{%
 \subsection{Evolution du Salaire Moyen par Tête et de la Productivité
 par tête depuis
 1990}\label{evolution-du-salaire-moyen-par-tuxeate-et-de-la-productivituxe9-par-tuxeate-depuis-1990}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-15-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-22-1.pdf}
 
 \newpage
-
-\hypertarget{duxe9composition-des-agruxe9gats-macoruxe9conomiques-par-branche-dactivituxe9}{%
-\section{Décomposition des agrégats macoréconomiques par branche
-d'activité}\label{duxe9composition-des-agruxe9gats-macoruxe9conomiques-par-branche-dactivituxe9}}
-
-\hypertarget{valeur-ajoutuxe9e-par-branche-depuis-fin-2019}{%
-\subsection{Valeur ajoutée par branche depuis fin
-2019}\label{valeur-ajoutuxe9e-par-branche-depuis-fin-2019}}
-
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-16-1.pdf}
-
-\hypertarget{progression-de-la-valeur-ajoutuxe9e-par-rapport-au-dernier-trimestre}{%
-\subsection{Progression de la valeur ajoutée par rapport au dernier
-trimestre}\label{progression-de-la-valeur-ajoutuxe9e-par-rapport-au-dernier-trimestre}}
-
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-17-1.pdf}
 
 \hypertarget{productivituxe9-du-travail-sectorielle-depuis-2019}{%
 \subsection{Productivité du travail sectorielle depuis
 2019}\label{productivituxe9-du-travail-sectorielle-depuis-2019}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-18-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-23-1.pdf}
 
 \hypertarget{evolution-du-volume-dheures-travailluxe9es-par-branche-depuis-2019}{%
 \subsection{Evolution du volume d'heures travaillées par branche depuis
 2019}\label{evolution-du-volume-dheures-travailluxe9es-par-branche-depuis-2019}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-19-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-24-1.pdf}
 
 \hypertarget{duxe9composition-de-la-productivituxe9-contribution-de-la-valeur-ajoutuxe9e-et-du-volume-dheures-travailluxe9es-par-secteur}{%
 \subsection{Décomposition de la Productivité : contribution de la valeur
 ajoutée et du volume d'heures travaillées par
 secteur}\label{duxe9composition-de-la-productivituxe9-contribution-de-la-valeur-ajoutuxe9e-et-du-volume-dheures-travailluxe9es-par-secteur}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-20-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-25-1.pdf}
 
 \newpage
 
@@ -502,7 +543,7 @@ secteur}\label{duxe9composition-de-la-productivituxe9-contribution-de-la-valeur-
 \subsection{Evolution du taux de marge sur longue
 période}\label{evolution-du-taux-de-marge-sur-longue-puxe9riode}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-21-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-26-1.pdf}
 
 \hypertarget{duxe9composition-du-taux-de-marge-par-contribution-productivituxe9-masse-salariale-cotisations-sociales-termes-de-luxe9change-autres-facteurs}{%
 \subsection{Décomposition du taux de marge par contribution
@@ -510,13 +551,13 @@ période}\label{evolution-du-taux-de-marge-sur-longue-puxe9riode}}
 l'échange, autres
 facteurs)}\label{duxe9composition-du-taux-de-marge-par-contribution-productivituxe9-masse-salariale-cotisations-sociales-termes-de-luxe9change-autres-facteurs}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-22-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-27-1.pdf}
 
 \hypertarget{evolution-du-taux-de-marge-par-secteur-par-rapport-uxe0-lannuxe9e-2018}{%
 \subsection{Evolution du taux de marge par secteur par rapport à l'année
 2018}\label{evolution-du-taux-de-marge-par-secteur-par-rapport-uxe0-lannuxe9e-2018}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-23-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-28-1.pdf}
 
 \newpage
 
@@ -528,32 +569,70 @@ facteurs)}\label{duxe9composition-du-taux-de-marge-par-contribution-productivitu
 \subsection{Taux de marge des secteurs énergétiques et des services de
 transport}\label{taux-de-marge-des-secteurs-uxe9nerguxe9tiques-et-des-services-de-transport}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-25-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-30-1.pdf}
 
 \hypertarget{taux-de-marge-de-lindustrie-cockuxe9faction---raffinage}{%
 \subsection{Taux de marge de l'industrie cockéfaction -
 raffinage}\label{taux-de-marge-de-lindustrie-cockuxe9faction---raffinage}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-27-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-32-1.pdf}
 
 \hypertarget{taux-de-marge-de-lindustrie-agro-alimentaire}{%
 \subsection{Taux de marge de l'industrie
 agro-alimentaire}\label{taux-de-marge-de-lindustrie-agro-alimentaire}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-28-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-33-1.pdf}
 
 \hypertarget{part-des-profits-exceptionnels-des-secteurs-uxe9nerguxe9tiques-dans-lensemble-de-la-valeur-ajoutuxe9e-franuxe7aise}{%
 \subsection{Part des profits exceptionnels des secteurs énergétiques
 dans l'ensemble de la valeur ajoutée
 française}\label{part-des-profits-exceptionnels-des-secteurs-uxe9nerguxe9tiques-dans-lensemble-de-la-valeur-ajoutuxe9e-franuxe7aise}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-29-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-34-1.pdf}
 
 \hypertarget{part-des-profits-exceptionnels-des-secteurs-uxe9nerguxe9tiques-et-de-lindustrie-agro-alimentaire-dans-luxe9conomie-franuxe7aise}{%
 \subsection{Part des profits exceptionnels des secteurs énergétiques et
 de l'industrie agro-alimentaire dans l'économie
 française}\label{part-des-profits-exceptionnels-des-secteurs-uxe9nerguxe9tiques-et-de-lindustrie-agro-alimentaire-dans-luxe9conomie-franuxe7aise}}
 
-\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-30-1.pdf}
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-35-1.pdf}
+
+\hypertarget{partage-de-la-valeur-ajoutuxe9e-entre-salaires-et-profits}{%
+\section{Partage de la valeur ajoutée entre salaires et
+profits}\label{partage-de-la-valeur-ajoutuxe9e-entre-salaires-et-profits}}
+
+\hypertarget{masse-salariale-et-excuxe9dent-brut-dexploitation-depuis-2018}{%
+\subsection{Masse salariale et Excédent brut d'exploitation depuis
+2018}\label{masse-salariale-et-excuxe9dent-brut-dexploitation-depuis-2018}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-38-1.pdf}
+
+\hypertarget{evolution-des-couxfbts-salariaux-et-des-marges-buxe9nuxe9ficiaires-des-entreprises-depuis-2010}{%
+\subsection{Evolution des coûts salariaux et des marges bénéficiaires
+des entreprises depuis
+2010}\label{evolution-des-couxfbts-salariaux-et-des-marges-buxe9nuxe9ficiaires-des-entreprises-depuis-2010}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-41-1.pdf}
+
+\hypertarget{evolution-du-couxfbt-salarial-unitaire-et-du-salaire-moyen-par-tuxeate-depuis-2010}{%
+\subsection{Evolution du coût salarial unitaire et du Salaire Moyen par
+Tête depuis
+2010}\label{evolution-du-couxfbt-salarial-unitaire-et-du-salaire-moyen-par-tuxeate-depuis-2010}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-42-1.pdf}
+
+\hypertarget{contribution-des-marges-unitaires-et-des-couxfbts-salariaux-unitaires-uxe0-linflation-du-pib}{%
+\subsection{Contribution des marges unitaires et des coûts salariaux
+unitaires à l'inflation du
+PIB}\label{contribution-des-marges-unitaires-et-des-couxfbts-salariaux-unitaires-uxe0-linflation-du-pib}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-45-1.pdf}
+
+\hypertarget{contribution-du-taux-de-marge-et-des-couxfbts-salariaux-unitaires-uxe0-linflation-du-pib}{%
+\subsection{Contribution du taux de marge et des coûts salariaux
+unitaires à l'inflation du
+PIB}\label{contribution-du-taux-de-marge-et-des-couxfbts-salariaux-unitaires-uxe0-linflation-du-pib}}
+
+\includegraphics{rapport_pdf_compte_branche_files/figure-latex/unnamed-chunk-47-1.pdf}
 
 \end{document}
