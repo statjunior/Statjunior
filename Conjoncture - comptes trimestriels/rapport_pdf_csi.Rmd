@@ -61,9 +61,9 @@ conflict_prefer("select", "dplyr")
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
 getwd()
 
-date_max_compte_def <- "2023-01-01"
-date_def_litt <- "1er trimestre 2023"
-date_def_trim <- "T1-2023"
+date_max_compte_def <- "2023-04-01"
+date_def_litt <- "2e trimestre 2023"
+date_def_trim <- "T2-2023"
 ```
 
 # Présentation
@@ -88,9 +88,9 @@ Le code source permettant de générer ce document est disponible sur Git [en cl
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
 #Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (1er trimestre 2023)
-date_max_compte_prov <- "2023-01-01"
+date_max_compte_prov <- "2023-04-01"
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
-date_max_compte_def <- "2023-01-01"
+date_max_compte_def <- "2023-04-01"
 
 
 ####Date de la base 100 pour les graphiques en niveau 

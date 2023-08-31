@@ -64,9 +64,9 @@ date_prov_litt <- "2e trimestre 2023"
 date_prov_trim <- "T2-2023"
 
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
-date_max_compte_def <- "2023-01-01"
-date_def_litt <- "1er trimestre 2023"
-date_def_trim <- "T1-2023"
+date_max_compte_def <- "2023-04-01"
+date_def_litt <- "2e trimestre 2023"
+date_def_trim <- "T2-2023"
 
 ###Chemin d'accès
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")

@@ -59,8 +59,8 @@ conflict_prefer("select", "dplyr")
 
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
 #Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (2e trimestre 2023)
-date_max <- "2023-07-01"
-date_max_litt <- "juillet 2023"
+date_max <- "2023-08-01"
+point_max_litt <- "août 2023"
 
 #Chemin d'accès 
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Inflation")
@@ -69,7 +69,7 @@ getwd()
 
 # Présentation
 
-Ce rapport **Rmarkdwon** sur l'inflation synthétise les publications de l'Indice des Prix à la Consommation de l'Insee. 
+Ce rapport **Rmarkdwon** sur l'inflation synthétise les publications de l'Indice des Prix à la Consommation de l'Insee. Le dernier point connu est `r point_max_litt`.
 
 Le rapport présente les graphiques en glissement annuel (inflation au sens classique) et en niveau afin de voir la dynamique mensuelle des prix (accélération ou décélération). 
 
@@ -247,7 +247,8 @@ plot_contrib_ipc <-  ggplot(data=gliss_composante_ipc , aes(x=DATE, y= contrib_g
   geom_line(aes(y = gliss_ipc, color =  "IPC")) + geom_point(aes(y = gliss_ipc, color =  "IPC")) +
   geom_line(aes(y = gliss_annuel_isj, color = "Indice sous-jacent"), type = "twodashed") +
   labs(title = "Contribution des postes de consommation au glissement annuel de l'IPC", 
-       subtitle = "Lecture : Au mois de juillet 2023, l'alimentation contribue pour 2 points au glissement annuel de l'inflation (+4,3 %)  \nSource : Insee \nCalculs et graphiques : @statjunior", 
+       
+       subtitle = paste0("Lecture : En ", point_max_litt, ", l'inflation est de 4,8 %. L'alimentation contribue pour 1,8 point à l'inflation. \nSource : Insee (Indice des Prix à la Consommation - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
        y = "Pourcentage d'inflation (%)", x = "Mois", fill='Composante') +
   #scale_color_manual(values = c("#333333"))
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
@@ -278,10 +279,14 @@ print(plot_contrib_ipc)
 # Evolution des composantes de l'inflation depuis juin 2021 (début des tensions inflationnistes)
 ```{r,fig.dim = c(14, 9)}
 #Ici on décompose l'évolution des prix par composante en base 100 en juin 2021 (début des tensions inflationnistes)
+valeur <- analyse_ipc2 |> filter(DATE == max(DATE), Composante == "Alimentation") %>%  pull(value) %>%  round(digits = 1)
+valeur <- valeur - 100 
 plot_ipc2 <- ggplot(data=analyse_ipc2, aes(x=DATE, y=value, fill = Composante)) +
   geom_line(aes(col = Composante), size =1.1)  +
-  labs(title = "Evolution des composantes de l'inflation depuis juin 2021", 
-      subtitle = "Lecture : Au mois de juillet 2023, les prix alimentaires ont augmenté de 20 % par rapport à juin 2021. \nSource : Insee (Indice des prix à la consommation) \nCalculs et graphiques : @statjunior", 
+  labs(title = "Evolution des composantes de l'inflation depuis juin 2021",
+       
+       subtitle = paste("Lecture : En", point_max_litt, ", les prix alimentaires ont augmenté de 11 % sur un an et de 0,3 % sur un mois. Les prix énergétiques progressent de 7 % sur un an et de 7 % sur un mois. \nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       
       y = "Base 100 en juin 2021", x = "Mois") +
   scale_color_manual(values = c("red", "#C77CFF", "blue", "#00BA38",  "orange",  "#D39200"))+
   geom_line(data = filter(analyse_ipc2, Composante == "Ensemble"), size = 1.5, color = "blue") +
@@ -303,6 +308,7 @@ plot_ipc2 <- ggplot(data=analyse_ipc2, aes(x=DATE, y=value, fill = Composante)) 
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
         axis.title.y = element_text(hjust = 0.5))
 print(plot_ipc2)
+rm(valeur)
 ```
 
 
