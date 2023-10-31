@@ -1,6 +1,6 @@
 ---
 title: "Synthèse conjoncturelle des comptes de branche"
-subtitle: "Résultats provisoires des *Comptes Nationaux Trimestriels* au 2e trimestre 2023."
+subtitle: "Résultats provisoires des *Comptes Nationaux Trimestriels* au 3e trimestre 2023."
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -59,9 +59,9 @@ conflict_prefer("select", "dplyr")
 
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
 #Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (2e trimestre 2023)
-date_max_compte_prov <- "2023-04-01"
-date_prov_litt <- "2e trimestre 2023"
-date_prov_trim <- "T2-2023"
+date_max_compte_prov <- "2023-07-01"
+date_prov_litt <- "3e trimestre 2023"
+date_prov_trim <- "T3-2023"
 
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
 date_max_compte_def <- "2023-04-01"
