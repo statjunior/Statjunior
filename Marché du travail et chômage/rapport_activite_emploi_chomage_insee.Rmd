@@ -1,6 +1,6 @@
 ---
 title: "Activité, emploi, chômage, et contraintes d'emploi."
-subtitle: "Résultats détaillés de l’Enquête Emploi de l’Insee au 2e trimestre 2023"
+subtitle: "Résultats détaillés de l’Enquête Emploi de l’Insee au 3e trimestre 2023"
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -56,7 +56,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 ####Paramètre à fixer 
-last_point <- "2e trimestre 2023"
+last_point <- "3e trimestre 2023"
 
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Marché du travail et chômage/")
 
@@ -654,6 +654,7 @@ plot_chom_bit_duree <-  ggplot(data=p_chom_bit, aes(x=DATE, y= OBS_VALUE)) +
   round(digits = 1), " %. \nChamp : France hors Mayotte \nSource : Insee - Enquête Emploi (Dernier point : ", last_point,"). \nCalculs et graphiques : @statjunior"),
   
        y = "Taux de chômage au sens du BIT (%)", x = "Année", color=NULL) +
+  facet_wrap(vars(TITLE_FR1), scales = "free",ncol = 2)+
   #scale_color_manual(values = c("#333333"))
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
                plot_title_size = 18,
@@ -670,7 +671,7 @@ plot_chom_bit_duree <-  ggplot(data=p_chom_bit, aes(x=DATE, y= OBS_VALUE)) +
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
-        axis.title.y = element_text(hjust = 0.5)) +ylim(0,NA)
+        axis.title.y = element_text(hjust = 0.5)) 
 print(plot_chom_bit_duree)
 ```
 
