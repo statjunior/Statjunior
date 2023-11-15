@@ -141,9 +141,9 @@
   \apptocmd{\@title}{\par {\large #1 \par}}{}{}
 }
 \makeatother
-\subtitle{Données administratives du 2e trimestre 2023.}
+\subtitle{Données administratives du 3e trimestre 2023.}
 \author{@statjunior}
-\date{26 juillet 2023}
+\date{15 novembre 2023}
 
 
 
@@ -236,7 +236,7 @@
 \usepackage{titling}
 \title{Les demandeurs d'emploi inscrits à Pôle Emploi}
 \author{@statjunior}
-\date{26 juillet 2023}
+\date{15 novembre 2023}
 
 %
 % tables
@@ -288,14 +288,14 @@
   \noindent {\huge \textbf{\textsf{Les demandeurs d'emploi inscrits à
 Pôle Emploi}}}
     \vskip 1em
-  {\Large \textsf{Données administratives du 2e trimestre 2023.}}
+  {\Large \textsf{Données administratives du 3e trimestre 2023.}}
     \vskip 2em
   \noindent {\Large \textsf{@statjunior}}
   \vfill
 }
 
 
-\textsf{26 juillet 2023}
+\textsf{15 novembre 2023}
 \end{flushleft}
 \end{titlepage}
 \restoregeometry
@@ -312,7 +312,7 @@ Pôle Emploi}}}
 \section{Présentation}\label{pruxe9sentation}}
 
 Ce rapport \emph{RMarkdown} analyse les effectifs de demandeurs d'emploi
-à Pôle Emploi au 2e trimestre 2023. Les données sont produites par la
+à Pôle Emploi au 3e trimestre 2023. Les données sont produites par la
 Dares et Pôle Emploi à partir de sources administratives exhaustives.
 
 \textbf{Les données sur les demandeurs d'emploi de Pôle Emploi ne
@@ -338,7 +338,7 @@ On relève également la durée d'inscription à Pôle Emploi, décomposée
 ensuite par tranches d'âge ou bien entre inscrits et sortants.
 
 On analyse enfin les motifs d'entrée et de sortie à Pôle Emploi au cours
-du 2e trimestre 2023. Une attention particulière doit être portée à
+du 3e trimestre 2023. Une attention particulière doit être portée à
 l'évolution des radiations ou du non renouvellement d'inscription, dans
 la mesure où il s'agit de sources administratives. Les comportements
 d'inscription et de contrôle administratif expliquent en effet une
@@ -354,7 +354,7 @@ entre le nombre de catégories A à Pôle Emploi et le nombre de chômeurs
 BIT mesurés par l'Insee.
 
 Ce rapport a été compilé automatiquement avec le logiciel \texttt{R}, le
-26 juillet 2023 à 14 heures et 47 minutes. Les potentielles erreurs
+15 novembre 2023 à 08 heures et 00 minutes. Les potentielles erreurs
 présentes dans ce document relèvent uniquement de la responsabilité de
 Statjunior.
 
@@ -371,10 +371,10 @@ catégories}\label{inscriptions-uxe0-puxf4le-emploi-par-catuxe9gories}}
 hors
 Mayotte)}\label{catuxe9gorie-a-catuxe9gorie-a-b-c-et-toutes-catuxe9gories-france-hors-mayotte}}
 
-Au 2e trimestre 2023, le nombre de demandeurs d'emploi en catégorie A
+Au 3e trimestre 2023, le nombre de demandeurs d'emploi en catégorie A
 s'établit à 3 millions d'individus.
 
-Il y a 5.3 millions d'individus en catégories A, B ou C et 6.1 millions
+Il y a 5.4 millions d'individus en catégories A, B ou C et 6.1 millions
 d'individus inscrits à Pôle Emploi en comptant toutes les catégories.
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-2-1.pdf}
@@ -391,16 +391,15 @@ métropolitaine}\label{catuxe9gorie-a-a-b-c-et-toutes-catuxe9gories-en-france-mu
 \subsection{Variation trimestrielle et annuelle des demandeurs
 d'emploi}\label{variation-trimestrielle-et-annuelle-des-demandeurs-demploi}}
 
-Au 2e trimestre 2023, le nombre de demandeurs d'emploi en catégorie A
-baisse de -0.2 \% par rapport au trimestre précédent et baisse de -5\%
-sur un an.
+Au 3e trimestre 2023, le nombre de demandeurs d'emploi en catégorie A
+augmente de 0.6 \% par rapport au trimestre précédent et baisse de
+-3.8\% sur un an.
 
-Le nombre de demandeurs d'emploi en catégories A-B-C baisse de -0.5 \%
-par rapport au trimestre précédent et baisse de -1.9\% sur un an.
+Le nombre de demandeurs d'emploi en catégories A-B-C augmente de 0.2 \%
+par rapport au trimestre précédent et baisse de -1.3\% sur un an.
 
-Le nombre de demandeurs d'emploi toutes catégories comprises baisse de
--0.3 \% par rapport au trimestre précédent et baisse de -1.7\% sur un
-an.
+Le nombre de demandeurs d'emploi toutes catégories comprises augmente de
+0.3 \% par rapport au trimestre précédent et baisse de -1\% sur un an.
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-5-1.pdf}
 
@@ -424,28 +423,28 @@ A-B-C)}\label{par-tranche-duxe2ge-catuxe9gorie-a-et-catuxe9gorie-a-b-c}}
 \section{Ancienneté d'inscription à Pôle
 Emploi}\label{anciennetuxe9-dinscription-uxe0-puxf4le-emploi}}
 
-\hypertarget{parmi-les-inscrits-au-2e-trimestre-2023}{%
-\subsection{Parmi les inscrits au 2e trimestre
-2023}\label{parmi-les-inscrits-au-2e-trimestre-2023}}
+\hypertarget{parmi-les-inscrits-au-3e-trimestre-2023}{%
+\subsection{Parmi les inscrits au 3e trimestre
+2023}\label{parmi-les-inscrits-au-3e-trimestre-2023}}
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-11-1.pdf}
 
-\hypertarget{par-tranche-duxe2ge-en-distinguant-les-inscrits-des-sortants-au-2e-trimestre-2023}{%
+\hypertarget{par-tranche-duxe2ge-en-distinguant-les-inscrits-des-sortants-au-3e-trimestre-2023}{%
 \subsection{Par tranche d'âge (en distinguant les inscrits des sortants
-au 2e trimestre
-2023)}\label{par-tranche-duxe2ge-en-distinguant-les-inscrits-des-sortants-au-2e-trimestre-2023}}
+au 3e trimestre
+2023)}\label{par-tranche-duxe2ge-en-distinguant-les-inscrits-des-sortants-au-3e-trimestre-2023}}
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-13-1.pdf}
 
-\hypertarget{les-motifs-dentruxe9e-uxe0-puxf4le-emploi-au-2e-trimestre-2023}{%
-\section{Les motifs d'entrée à Pôle Emploi au 2e trimestre
-2023}\label{les-motifs-dentruxe9e-uxe0-puxf4le-emploi-au-2e-trimestre-2023}}
+\hypertarget{les-motifs-dentruxe9e-uxe0-puxf4le-emploi-au-3e-trimestre-2023}{%
+\section{Les motifs d'entrée à Pôle Emploi au 3e trimestre
+2023}\label{les-motifs-dentruxe9e-uxe0-puxf4le-emploi-au-3e-trimestre-2023}}
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-15-1.pdf}
 
-\hypertarget{les-motifs-de-sortie-de-puxf4le-emploi-au-2e-trimestre-2023}{%
-\section{Les motifs de sortie de Pôle Emploi au 2e trimestre
-2023}\label{les-motifs-de-sortie-de-puxf4le-emploi-au-2e-trimestre-2023}}
+\hypertarget{les-motifs-de-sortie-de-puxf4le-emploi-au-3e-trimestre-2023}{%
+\section{Les motifs de sortie de Pôle Emploi au 3e trimestre
+2023}\label{les-motifs-de-sortie-de-puxf4le-emploi-au-3e-trimestre-2023}}
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-17-1.pdf}
 
@@ -455,7 +454,7 @@ au 2e trimestre
 \section{Les allocataires indemnisés par Pôle
 Emploi}\label{les-allocataires-indemnisuxe9s-par-puxf4le-emploi}}
 
-Attention : dernier point au 3e trimestre 2022.
+Attention : dernier point au 4e trimestre 2022.
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-19-1.pdf}
 
@@ -466,7 +465,7 @@ Attention : dernier point au 3e trimestre 2022.
 Emploi) avec l'enquête Emploi (chômage
 BIT-Insee)}\label{la-confrontation-des-sources-administratives-dares-puxf4le-emploi-avec-lenquuxeate-emploi-chuxf4mage-bit-insee}}
 
-Attention : dernier point au 1er trimestre 2023.
+Attention : dernier point au 3e trimestre 2023.
 
 \includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-21-1.pdf}
 
