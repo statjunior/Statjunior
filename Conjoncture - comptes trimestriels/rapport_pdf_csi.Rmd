@@ -8,7 +8,7 @@ output:
     template: eisvogel.tex
     keep_tex: yes
   word_document: default
-subtitle: Résultats détaillés des *Comptes Nationaux Trimestriels* au 2e trimestre
+subtitle: Résultats détaillés des *Comptes Nationaux Trimestriels* au 3e trimestre
   2023.
 titlepage: yes
 titlepage-color: 9e8b10
@@ -61,9 +61,9 @@ conflict_prefer("select", "dplyr")
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
 getwd()
 
-date_max_compte_def <- "2023-04-01"
-date_def_litt <- "2e trimestre 2023"
-date_def_trim <- "T2-2023"
+date_max_compte_def <- "2023-07-01"
+date_def_litt <- "3e trimestre 2023"
+date_def_trim <- "T3-2023"
 ```
 
 # Présentation
