@@ -1,6 +1,6 @@
 ---
 title: "Synthèse conjoncturelle des comptes de branche"
-subtitle: "Résultats détaillés des *Comptes Nationaux Trimestriels* au 3e trimestre 2023."
+subtitle: "Résultats détaillés des *Comptes Nationaux Trimestriels* au 4e trimestre 2023."
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -59,9 +59,9 @@ conflict_prefer("select", "dplyr")
 
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
 #Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (2e trimestre 2023)
-date_max_compte_prov <- "2023-07-01"
-date_prov_litt <- "3e trimestre 2023"
-date_prov_trim <- "T3-2023"
+date_max_compte_prov <- "2023-10-01"
+date_prov_litt <- "4e trimestre 2023"
+date_prov_trim <- "T4-2023"
 
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
 date_max_compte_def <- "2023-07-01"
@@ -254,6 +254,7 @@ pib_2014_bis <- pib_2014 |>
   mutate(TITLE_FR3 = ifelse(is.na(TITLE_FR3) & (TITLE_FR2 == "val" | TITLE_FR2 == "vol"), TITLE_FR2, TITLE_FR3))
 
 ###############################Calcul des contributions trimestrielles au PIB par composante
+####FAUX : revoir la somme des volume chaînés.
 contrib_pib_eer <- filter(pib_2014_bis, TITLE_FR2 =="contrib_pib") |>
   pivot_wider(names_from = TITLE_FR1, values_from = OBS_VALUE, id_cols = DATE) |>
   mutate(croissance_pib = conso_men+conso_apu_ind+conso_apu_col+conso_isblsm+fbcf_tot+export_tot+vs_tot-import_tot) |>
@@ -1299,9 +1300,9 @@ plot_fbcf_2019 <-ggplot(data = cb_branche_fbcf_men,
   geom_col(position = "dodge") +
   labs(title = "Evolution de l'Investissement dans chaque produit par rapport à la moyenne de 2019", 
        
-       subtitle = paste("Lecture: Au",date_prov_litt, ", la consommation des ménages globale",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>0, round(valeur,2), round(valeur,2)), "% par rapport à la moyenne de l'année 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_prov_litt, ", l'investissement total",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>0, round(valeur,2), round(valeur,2)), "% par rapport à la moyenne de l'année 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
        
-       y = "Variation par rapport à 2019 (%)", x = "Secteur") +
+       y = "Variation par rapport à 2019 (%)", x = "Produit") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
                plot_title_size = 18,
@@ -1338,9 +1339,9 @@ plot_fbcf_cb_trim <-ggplot(data = cb_branche_fbcf_men,
   geom_col(position = "dodge", color = "#F8766D") +
   labs(title = "Evolution de l'Investissement dans chaque produit par rapport au trimestre précédent", 
        
-       subtitle = paste("Lecture: Au",date_prov_litt, ", la consommation des ménages globale",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>0, round(valeur,2), round(valeur,2)), "% par rapport au trimestre précédent. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_prov_litt, ", l'investissement total",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>0, round(valeur,2), round(valeur,2)), "% par rapport au trimestre précédent. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
        
-       y = "Variation par rapport au trimestre précédent (%)", x = "Secteur") +
+       y = "Variation par rapport au trimestre précédent (%)", x = "Produit") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
                plot_title_size = 18,
