@@ -1,6 +1,6 @@
 ---
 title: "Les demandeurs d'emploi inscrits à Pôle Emploi"
-subtitle: "Données administratives du 3e trimestre 2023."
+subtitle: "Données administratives du 4e trimestre 2023."
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -63,7 +63,7 @@ setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Demandeurs d'emploi (
 getwd()
 
 ##########0) Paramètre à fixer 
-date_prov_litt <- "3e trimestre 2023"
+date_prov_litt <- "4e trimestre 2023"
 ```
 
 # Présentation
