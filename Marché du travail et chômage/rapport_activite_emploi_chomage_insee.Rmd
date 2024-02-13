@@ -1,6 +1,6 @@
 ---
 title: "Activité, emploi, chômage, et contraintes d'emploi."
-subtitle: "Résultats détaillés de l’Enquête Emploi de l’Insee au 3e trimestre 2023"
+subtitle: "Résultats détaillés de l’Enquête Emploi de l’Insee au 4e trimestre 2023"
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -56,7 +56,7 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 ####Paramètre à fixer 
-last_point <- "3e trimestre 2023"
+last_point <- "4e trimestre 2023"
 
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Marché du travail et chômage/")
 
