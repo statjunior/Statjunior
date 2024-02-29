@@ -1,5 +1,5 @@
 ---
-title: "Synthèse conjoncturelle des comptes de branche"
+title: "Synthèse des comptes de branche"
 subtitle: "Résultats détaillés des *Comptes Nationaux Trimestriels* au 4e trimestre 2023."
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
@@ -64,9 +64,9 @@ date_prov_litt <- "4e trimestre 2023"
 date_prov_trim <- "T4-2023"
 
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
-date_max_compte_def <- "2023-07-01"
-date_def_litt <- "3e trimestre 2023"
-date_def_trim <- "T3-2023"
+date_max_compte_def <- "2023-10-01"
+date_def_litt <- "4e trimestre 2023"
+date_def_trim <- "T4-2023"
 
 ###Chemin d'accès
 setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
