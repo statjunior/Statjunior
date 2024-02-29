@@ -8,7 +8,7 @@ output:
     template: eisvogel.tex
     keep_tex: yes
   word_document: default
-subtitle: Résultats détaillés des *Comptes Nationaux Trimestriels* au 3e trimestre
+subtitle: Résultats détaillés des *Comptes Nationaux Trimestriels* au 4e trimestre
   2023.
 titlepage: yes
 titlepage-color: 9e8b10
