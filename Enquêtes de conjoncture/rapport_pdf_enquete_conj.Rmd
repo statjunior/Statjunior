@@ -1,20 +1,17 @@
 ---
 title: "Enquêtes de conjoncture auprès des entreprises"
-subtitle: "Résultats au mois d'août 2023"
-author: "@statjunior"
+author: '@statjunior'
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   pdf_document:
     latex_engine: xelatex
-    template: eisvogel.tex
     keep_tex: true
-titlepage: true
-titlepage-color: "884373"
+subtitle: "Résultats du mois de juin 2024"
+titlepage: yes
+titlepage-color: '884373'
 titlepage-text-color: "FFFFFF"
-disable-header-and-footer: true
-logo: "logo.pdf"
-logo-width: 0
-lang: fr-FR
+disable-header-and-footer: yes
+lang: "fr-FR"
 ---
 
 ```{r setup, include=FALSE}
@@ -36,14 +33,14 @@ library(knitr)
 library(tempdisagg)
 library(labelled)
 library(stringr)
-library(Hmisc)
+# library(Hmisc)
 library(hrbrthemes)
 library(lubridate)
 library(conflicted)
 library(base)
 library(tidyr)
 library(cowplot)
-library(plotly)
+# library(plotly)
 
 conflict_prefer("rename", "dplyr")
 conflict_prefer("filter", "dplyr")
@@ -56,10 +53,15 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 ###Paramètres à fixer 
-point_max <- "2023-08-01"
-point_max_litt <- "août 2023"
+point_max <- "2024-07-01"
+point_max_litt <- "juillet 2024"
 
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Enquêtes de conjoncture/")
+###Si sur poste Insee
+Sys.setenv(http_proxy="proxy-rie.http.insee.fr:8080")
+Sys.setenv(https_proxy="proxy-rie.http.insee.fr:8080")
+
+#setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Enquêtes de conjoncture/")
+setwd <- setwd("C:/Users/ZHRRO8/Documents/Git_statjunior/Statjunior/Enquêtes de conjoncture/")
 ```
 
 # Présentation
@@ -112,9 +114,9 @@ plot_climat_conj_ts_secteurs <-ggplot(data = climat_all_emploi_affaires,
   geom_line(aes(col = TITLE_FR1), size =1.1) +
   geom_hline(yintercept=100, linetype="dashed", color = "black")+
   labs(title = "Climat des affaires et de l'emploi - Tous secteurs", 
-       subtitle = paste("Lecture : En", point_max_litt, ", le climat des affaires est de", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat des affaires") %>% pull(OBS_VALUE),
-                        "et le climat de l'emploi est de", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat de l'emploi") %>% pull(OBS_VALUE)
-, "(la moyenne de longue période est de 100). \nLecture : Par rapport au mois précédent, le climat des affaires", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat des affaires") %>% pull(conj), ", celui de l'emploi",valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat de l'emploi") %>% pull(conj), ".\nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
+       subtitle = paste0("Lecture : En ", point_max_litt, ", le climat des affaires est de ", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat des affaires") %>% pull(OBS_VALUE),
+                        " et le climat de l'emploi est de ", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat de l'emploi") %>% pull(OBS_VALUE)
+, " (la moyenne de longue période est de 100). \nLecture : Par rapport au mois précédent, le climat des affaires ", valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat des affaires") %>% pull(conj), ", celui de l'emploi ",valeur <- climat_all_emploi_affaires %>% filter(DATE == max(DATE), TITLE_FR1 == "Indicateur du climat de l'emploi") %>% pull(conj), ".\nSource : Insee (Enquêtes de conjoncture, données CVS - dernier point :", point_max_litt,") \nCalculs et graphiques : @statjunior"), 
        y = "Normalisé de moyenne 100 et écart-type 10", x = "Date") +
   scale_color_manual(values = c("orange", "#00B8E7")) + 
   scale_fill_manual(name = '',  values=c("Récession" = "grey60"))+
