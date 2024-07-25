@@ -1,59 +1,10 @@
-%%
-% Copyright (c) 2017 - 2023, Pascal Wagler;
-% Copyright (c) 2014 - 2023, John MacFarlane
-%
-% All rights reserved.
-%
-% Redistribution and use in source and binary forms, with or without
-% modification, are permitted provided that the following conditions
-% are met:
-%
-% - Redistributions of source code must retain the above copyright
-% notice, this list of conditions and the following disclaimer.
-%
-% - Redistributions in binary form must reproduce the above copyright
-% notice, this list of conditions and the following disclaimer in the
-% documentation and/or other materials provided with the distribution.
-%
-% - Neither the name of John MacFarlane nor the names of other
-% contributors may be used to endorse or promote products derived
-% from this software without specific prior written permission.
-%
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-% FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-% COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-% INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-% BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-% LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-% CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-% LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-% POSSIBILITY OF SUCH DAMAGE.
-%%
-
-%%
-% This is the Eisvogel pandoc LaTeX template.
-%
-% For usage information and examples visit the official GitHub page:
-% https://github.com/Wandmalfarbe/pandoc-latex-template
-%%
-
 % Options for packages loaded elsewhere
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
-\PassOptionsToPackage{dvipsnames,svgnames,x11names,table}{xcolor}
 %
 \documentclass[
-  paper=a4,
-  ,captions=tableheading
-]{scrartcl}
+]{article}
 \usepackage{amsmath,amssymb}
-% Use setspace anyway because we change the default line spacing.
-% The spacing is changed early to affect the titlepage and the TOC.
-\usepackage{setspace}
-\setstretch{1.2}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
@@ -85,28 +36,21 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\definecolor{default-linkcolor}{HTML}{A50000}
-\definecolor{default-filecolor}{HTML}{A50000}
-\definecolor{default-citecolor}{HTML}{4077C0}
-\definecolor{default-urlcolor}{HTML}{4077C0}
-\usepackage[margin=2.5cm,includehead=true,includefoot=true,centering,]{geometry}
-% add backlinks to footnote references, cf. https://tex.stackexchange.com/questions/302266/make-footnote-clickable-both-ways
-\usepackage{footnotebackref}
+\usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
-% Make use of float-package and set default placement for figures to H.
-% The option H means 'PUT IT HERE' (as  opposed to the standard h option which means 'You may put it here if you like').
-\usepackage{float}
-\floatplacement{figure}{H}
+\def\fps@figure{htbp}
 \makeatother
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
@@ -121,10 +65,7 @@
 % get rid of language-specific shorthands (see #6817):
 \let\LanguageShortHands\languageshorthands
 \def\languageshorthands#1{}
-\ifLuaTeX
-  \usepackage{selnolig}  % disable illegal ligatures
-\fi
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
 \hypersetup{
@@ -132,8 +73,8 @@
   pdfauthor={@statjunior},
   pdflang={fr-FR},
   hidelinks,
-  breaklinks=true,
-  pdfcreator={LaTeX via pandoc with the Eisvogel template}}
+  pdfcreator={LaTeX via pandoc}}
+
 \title{Les demandeurs d'emploi inscrits à Pôle Emploi}
 \usepackage{etoolbox}
 \makeatletter
@@ -141,178 +82,17 @@
   \apptocmd{\@title}{\par {\large #1 \par}}{}{}
 }
 \makeatother
-\subtitle{Données administratives du 2e trimestre 2023.}
+\subtitle{Données administratives du 2e trimestre 2024.}
 \author{@statjunior}
-\date{26 juillet 2023}
-
-
-
-%%
-%% added
-%%
-
-
-%
-% for the background color of the title page
-%
-\usepackage{pagecolor}
-\usepackage{afterpage}
-\usepackage[margin=2.5cm,includehead=true,includefoot=true,centering]{geometry}
-
-%
-% break urls
-%
-\PassOptionsToPackage{hyphens}{url}
-
-%
-% When using babel or polyglossia with biblatex, loading csquotes is recommended
-% to ensure that quoted texts are typeset according to the rules of your main language.
-%
-\usepackage{csquotes}
-
-%
-% captions
-%
-\definecolor{caption-color}{HTML}{777777}
-\usepackage[font={stretch=1.2}, textfont={color=caption-color}, position=top, skip=4mm, labelfont=bf, singlelinecheck=false, justification=raggedright]{caption}
-\setcapindent{0em}
-
-%
-% blockquote
-%
-\definecolor{blockquote-border}{RGB}{221,221,221}
-\definecolor{blockquote-text}{RGB}{119,119,119}
-\usepackage{mdframed}
-\newmdenv[rightline=false,bottomline=false,topline=false,linewidth=3pt,linecolor=blockquote-border,skipabove=\parskip]{customblockquote}
-\renewenvironment{quote}{\begin{customblockquote}\list{}{\rightmargin=0em\leftmargin=0em}%
-\item\relax\color{blockquote-text}\ignorespaces}{\unskip\unskip\endlist\end{customblockquote}}
-
-%
-% Source Sans Pro as the default font family
-% Source Code Pro for monospace text
-%
-% 'default' option sets the default
-% font family to Source Sans Pro, not \sfdefault.
-%
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
-    \usepackage[default]{sourcesanspro}
-  \usepackage{sourcecodepro}
-  \else % if not pdftex
-    \usepackage[default]{sourcesanspro}
-  \usepackage{sourcecodepro}
-
-  % XeLaTeX specific adjustments for straight quotes: https://tex.stackexchange.com/a/354887
-  % This issue is already fixed (see https://github.com/silkeh/latex-sourcecodepro/pull/5) but the
-  % fix is still unreleased.
-  % TODO: Remove this workaround when the new version of sourcecodepro is released on CTAN.
-  \ifxetex
-    \makeatletter
-    \defaultfontfeatures[\ttfamily]
-      { Numbers   = \sourcecodepro@figurestyle,
-        Scale     = \SourceCodePro@scale,
-        Extension = .otf }
-    \setmonofont
-      [ UprightFont    = *-\sourcecodepro@regstyle,
-        ItalicFont     = *-\sourcecodepro@regstyle It,
-        BoldFont       = *-\sourcecodepro@boldstyle,
-        BoldItalicFont = *-\sourcecodepro@boldstyle It ]
-      {SourceCodePro}
-    \makeatother
-  \fi
-  \fi
-
-%
-% heading color
-%
-\definecolor{heading-color}{RGB}{40,40,40}
-\addtokomafont{section}{\color{heading-color}}
-% When using the classes report, scrreprt, book,
-% scrbook or memoir, uncomment the following line.
-%\addtokomafont{chapter}{\color{heading-color}}
-
-%
-% variables for title, author and date
-%
-\usepackage{titling}
-\title{Les demandeurs d'emploi inscrits à Pôle Emploi}
-\author{@statjunior}
-\date{26 juillet 2023}
-
-%
-% tables
-%
-
-%
-% remove paragraph indention
-%
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt plus 2pt minus 1pt}
-\setlength{\emergencystretch}{3em}  % prevent overfull lines
-
-%
-%
-% Listings
-%
-%
-
-
-%
-% header and footer
-%
-
-%%
-%% end added
-%%
+\date{25 juillet 2024}
 
 \begin{document}
+\maketitle
 
-%%
-%% begin titlepage
-%%
-\begin{titlepage}
-\newgeometry{left=6cm}
-\definecolor{titlepage-color}{HTML}{AD641F}
-\newpagecolor{titlepage-color}\afterpage{\restorepagecolor}
-\newcommand{\colorRule}[3][black]{\textcolor[HTML]{#1}{\rule{#2}{#3}}}
-\begin{flushleft}
-\noindent
-\\[-1em]
-\color[HTML]{FFFFFF}
-\makebox[0pt][l]{\colorRule[435488]{1.3\textwidth}{4pt}}
-\par
-\noindent
-
-{
-  \setstretch{1.4}
-  \vfill
-  \noindent {\huge \textbf{\textsf{Les demandeurs d'emploi inscrits à
-Pôle Emploi}}}
-    \vskip 1em
-  {\Large \textsf{Données administratives du 2e trimestre 2023.}}
-    \vskip 2em
-  \noindent {\Large \textsf{@statjunior}}
-  \vfill
-}
-
-
-\textsf{26 juillet 2023}
-\end{flushleft}
-\end{titlepage}
-\restoregeometry
-\pagenumbering{arabic} 
-
-%%
-%% end titlepage
-%%
-
-% \maketitle
-
-
-\hypertarget{pruxe9sentation}{%
-\section{Présentation}\label{pruxe9sentation}}
+\section{Présentation}\label{pruxe9sentation}
 
 Ce rapport \emph{RMarkdown} analyse les effectifs de demandeurs d'emploi
-à Pôle Emploi au 2e trimestre 2023. Les données sont produites par la
+à Pôle Emploi au 2ème trimestre 2024. Les données sont produites par la
 Dares et Pôle Emploi à partir de sources administratives exhaustives.
 
 \textbf{Les données sur les demandeurs d'emploi de Pôle Emploi ne
@@ -338,7 +118,7 @@ On relève également la durée d'inscription à Pôle Emploi, décomposée
 ensuite par tranches d'âge ou bien entre inscrits et sortants.
 
 On analyse enfin les motifs d'entrée et de sortie à Pôle Emploi au cours
-du 2e trimestre 2023. Une attention particulière doit être portée à
+du 2ème trimestre 2024. Une attention particulière doit être portée à
 l'évolution des radiations ou du non renouvellement d'inscription, dans
 la mesure où il s'agit de sources administratives. Les comportements
 d'inscription et de contrôle administratif expliquent en effet une
@@ -354,120 +134,108 @@ entre le nombre de catégories A à Pôle Emploi et le nombre de chômeurs
 BIT mesurés par l'Insee.
 
 Ce rapport a été compilé automatiquement avec le logiciel \texttt{R}, le
-26 juillet 2023 à 14 heures et 47 minutes. Les potentielles erreurs
+25 juillet 2024 à 13 heures et 47 minutes. Les potentielles erreurs
 présentes dans ce document relèvent uniquement de la responsabilité de
 Statjunior.
 
 Le code source permettant de générer ce document est disponible sur Git
-\href{https://github.com/statjunior/Statjunior/tree/main/Demandeurs\%20d\textquotesingle{}emploi\%20(Pole\%20Emploi)/}{en
+\href{https://github.com/statjunior/Statjunior/tree/main/Demandeurs\%20d'emploi\%20(Pole\%20Emploi)/}{en
 cliquant ici}.
 
-\hypertarget{inscriptions-uxe0-puxf4le-emploi-par-catuxe9gories}{%
-\section{Inscriptions à Pôle Emploi par
-catégories}\label{inscriptions-uxe0-puxf4le-emploi-par-catuxe9gories}}
+\newpage
 
-\hypertarget{catuxe9gorie-a-catuxe9gorie-a-b-c-et-toutes-catuxe9gories-france-hors-mayotte}{%
+\section{Inscriptions à Pôle Emploi par
+catégories}\label{inscriptions-uxe0-puxf4le-emploi-par-catuxe9gories}
+
 \subsection{Catégorie A, Catégorie A-B-C et toutes catégories (France
 hors
-Mayotte)}\label{catuxe9gorie-a-catuxe9gorie-a-b-c-et-toutes-catuxe9gories-france-hors-mayotte}}
+Mayotte)}\label{catuxe9gorie-a-catuxe9gorie-a-b-c-et-toutes-catuxe9gories-france-hors-mayotte}
 
-Au 2e trimestre 2023, le nombre de demandeurs d'emploi en catégorie A
+Au 2ème trimestre 2024, le nombre de demandeurs d'emploi en catégorie A
 s'établit à 3 millions d'individus.
 
-Il y a 5.3 millions d'individus en catégories A, B ou C et 6.1 millions
+Il y a 5.4 millions d'individus en catégories A, B ou C et 6.1 millions
 d'individus inscrits à Pôle Emploi en comptant toutes les catégories.
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-2-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-2-1.pdf}}
 
-\hypertarget{catuxe9gorie-a-a-b-c-et-toutes-catuxe9gories-en-france-muxe9tropolitaine}{%
 \subsection{Catégorie A, A-B-C et toutes catégories en France
-métropolitaine}\label{catuxe9gorie-a-a-b-c-et-toutes-catuxe9gories-en-france-muxe9tropolitaine}}
+métropolitaine}\label{catuxe9gorie-a-a-b-c-et-toutes-catuxe9gories-en-france-muxe9tropolitaine}
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-3-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-3-1.pdf}}
 
 \newpage
 
-\hypertarget{variation-trimestrielle-et-annuelle-des-demandeurs-demploi}{%
 \subsection{Variation trimestrielle et annuelle des demandeurs
-d'emploi}\label{variation-trimestrielle-et-annuelle-des-demandeurs-demploi}}
+d'emploi}\label{variation-trimestrielle-et-annuelle-des-demandeurs-demploi}
 
-Au 2e trimestre 2023, le nombre de demandeurs d'emploi en catégorie A
-baisse de -0.2 \% par rapport au trimestre précédent et baisse de -5\%
-sur un an.
+Au 2ème trimestre 2024, le nombre de demandeurs d'emploi en catégorie A
+baisse de -0.4 \% par rapport au trimestre précédent et augmente de
+0.2\% sur un an.
 
-Le nombre de demandeurs d'emploi en catégories A-B-C baisse de -0.5 \%
-par rapport au trimestre précédent et baisse de -1.9\% sur un an.
+Le nombre de demandeurs d'emploi en catégories A-B-C baisse de -0.2 \%
+par rapport au trimestre précédent et augmente de 0.8\% sur un an.
 
 Le nombre de demandeurs d'emploi toutes catégories comprises baisse de
--0.3 \% par rapport au trimestre précédent et baisse de -1.7\% sur un
+-0.3 \% par rapport au trimestre précédent et augmente de 0.7\% sur un
 an.
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-5-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-5-1.pdf}}
 
-\hypertarget{structure-des-inscrits-par-genre-et-par-tranche-duxe2ge}{%
 \section{Structure des inscrits par genre et par tranche
-d'âge}\label{structure-des-inscrits-par-genre-et-par-tranche-duxe2ge}}
+d'âge}\label{structure-des-inscrits-par-genre-et-par-tranche-duxe2ge}
 
-\hypertarget{par-genre-catuxe9gorie-a-et-catuxe9gorie-a-b-c}{%
 \subsection{Par genre (catégorie A et catégorie
-A-B-C)}\label{par-genre-catuxe9gorie-a-et-catuxe9gorie-a-b-c}}
+A-B-C)}\label{par-genre-catuxe9gorie-a-et-catuxe9gorie-a-b-c}
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-7-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-7-1.pdf}}
 
-\hypertarget{par-tranche-duxe2ge-catuxe9gorie-a-et-catuxe9gorie-a-b-c}{%
 \subsection{Par tranche d'âge (catégorie A et catégorie
-A-B-C)}\label{par-tranche-duxe2ge-catuxe9gorie-a-et-catuxe9gorie-a-b-c}}
+A-B-C)}\label{par-tranche-duxe2ge-catuxe9gorie-a-et-catuxe9gorie-a-b-c}
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-9-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-9-1.pdf}}
 
-\hypertarget{anciennetuxe9-dinscription-uxe0-puxf4le-emploi}{%
 \section{Ancienneté d'inscription à Pôle
-Emploi}\label{anciennetuxe9-dinscription-uxe0-puxf4le-emploi}}
+Emploi}\label{anciennetuxe9-dinscription-uxe0-puxf4le-emploi}
 
-\hypertarget{parmi-les-inscrits-au-2e-trimestre-2023}{%
-\subsection{Parmi les inscrits au 2e trimestre
-2023}\label{parmi-les-inscrits-au-2e-trimestre-2023}}
+\subsection{Parmi les inscrits au 2ème trimestre
+2024}\label{parmi-les-inscrits-au-2uxe8me-trimestre-2024}
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-11-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-11-1.pdf}}
 
-\hypertarget{par-tranche-duxe2ge-en-distinguant-les-inscrits-des-sortants-au-2e-trimestre-2023}{%
 \subsection{Par tranche d'âge (en distinguant les inscrits des sortants
-au 2e trimestre
-2023)}\label{par-tranche-duxe2ge-en-distinguant-les-inscrits-des-sortants-au-2e-trimestre-2023}}
+au 2ème trimestre
+2024)}\label{par-tranche-duxe2ge-en-distinguant-les-inscrits-des-sortants-au-2uxe8me-trimestre-2024}
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-13-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-13-1.pdf}}
 
-\hypertarget{les-motifs-dentruxe9e-uxe0-puxf4le-emploi-au-2e-trimestre-2023}{%
-\section{Les motifs d'entrée à Pôle Emploi au 2e trimestre
-2023}\label{les-motifs-dentruxe9e-uxe0-puxf4le-emploi-au-2e-trimestre-2023}}
+\section{Les motifs d'entrée à Pôle Emploi au 2ème trimestre
+2024}\label{les-motifs-dentruxe9e-uxe0-puxf4le-emploi-au-2uxe8me-trimestre-2024}
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-15-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-15-1.pdf}}
 
-\hypertarget{les-motifs-de-sortie-de-puxf4le-emploi-au-2e-trimestre-2023}{%
-\section{Les motifs de sortie de Pôle Emploi au 2e trimestre
-2023}\label{les-motifs-de-sortie-de-puxf4le-emploi-au-2e-trimestre-2023}}
+\section{Les motifs de sortie de Pôle Emploi au 2ème trimestre
+2024}\label{les-motifs-de-sortie-de-puxf4le-emploi-au-2uxe8me-trimestre-2024}
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-17-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-17-1.pdf}}
 
 \newpage
 
-\hypertarget{les-allocataires-indemnisuxe9s-par-puxf4le-emploi}{%
 \section{Les allocataires indemnisés par Pôle
-Emploi}\label{les-allocataires-indemnisuxe9s-par-puxf4le-emploi}}
+Emploi}\label{les-allocataires-indemnisuxe9s-par-puxf4le-emploi}
 
-Attention : dernier point au 3e trimestre 2022.
+Attention : dernier point au 3e trimestre 2023.
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-19-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-19-1.pdf}}
 
 \newpage
 
-\hypertarget{la-confrontation-des-sources-administratives-dares-puxf4le-emploi-avec-lenquuxeate-emploi-chuxf4mage-bit-insee}{%
 \section{La confrontation des sources administratives (Dares-Pôle
 Emploi) avec l'enquête Emploi (chômage
-BIT-Insee)}\label{la-confrontation-des-sources-administratives-dares-puxf4le-emploi-avec-lenquuxeate-emploi-chuxf4mage-bit-insee}}
+BIT-Insee)}\label{la-confrontation-des-sources-administratives-dares-puxf4le-emploi-avec-lenquuxeate-emploi-chuxf4mage-bit-insee}
 
-Attention : dernier point au 1er trimestre 2023.
+Attention : dernier point au 1er trimestre 2024.
 
-\includegraphics{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-21-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{rapport_pdf_demandeurs_emploi_pole_emploi_files/figure-latex/unnamed-chunk-21-1.pdf}}
 
 \end{document}
