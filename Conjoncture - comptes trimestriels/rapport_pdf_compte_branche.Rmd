@@ -1,12 +1,11 @@
 ---
-title: "Synthèse conjoncturelle des comptes de branche"
-subtitle: "Résultats provisoires des *Comptes Nationaux Trimestriels* au 2e trimestre 2023."
+title: "Synthèse des comptes trimestriels : approche offre et demande"
+subtitle: "Résultats provisoires des *Comptes Nationaux Trimestriels* au 2e trimestre 2024."
 author: "@statjunior"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   pdf_document:
     latex_engine: xelatex
-    template: eisvogel.tex
     keep_tex: true
 titlepage: true
 titlepage-color: "764388"
@@ -57,19 +56,24 @@ conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
 
+###Si sur poste Insee
+Sys.setenv(http_proxy="proxy-rie.http.insee.fr:8080")
+Sys.setenv(https_proxy="proxy-rie.http.insee.fr:8080")
+
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
 #Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (2e trimestre 2023)
-date_max_compte_prov <- "2023-04-01"
-date_prov_litt <- "2e trimestre 2023"
-date_prov_trim <- "T2-2023"
+date_max_compte_prov <- "2024-04-01"
+date_prov_litt <- "2e trimestre 2024"
+date_prov_trim <- "T2-2024"
 
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
-date_max_compte_def <- "2023-01-01"
-date_def_litt <- "1er trimestre 2023"
-date_def_trim <- "T1-2023"
+date_max_compte_def <- "2024-01-01"
+date_def_litt <- "1er trimestre 2024"
+date_def_trim <- "T1-2024"
 
 ###Chemin d'accès
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
+setwd <- setwd("C:/Users/ZHRRO8/Documents/Git_statjunior/Statjunior/Conjoncture - comptes trimestriels")
+#C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/
 getwd()
 #  DATE ==max(full_tx_marge_2018t4$DATE[full_tx_marge_2018t4$DATE!=max(full_tx_marge_2018t4$DATE)])
 
@@ -77,7 +81,11 @@ getwd()
 date_prec_prov <- as.Date(date_max_compte_prov) - months(3) 
 date_prec_prov <- substr(date_prec_prov, 1, 10) 
 
+date_ga <- as.Date(date_max_compte_prov) - months(12) 
+date_ga <- substr(date_ga, 1, 10) 
+
 scale_2019t4 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2019-10-01"]*100
+scale_2021t4 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2021-10-01"]*100
 scale_2018t4 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2018-10-01"]*100
 scale_2018t1 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2018-01-01"]*100
 scale_2010t1 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2010-01-01"]*100
@@ -86,6 +94,7 @@ scale_annee_2019 <- function(x, na.rm = FALSE) x/((x[cnt_cb_complet[,1] == "2019
 scale_annee_2018 <- function(x, na.rm = FALSE) x/((x[cnt_cb_complet[,1] == "2018-01-01"]+x[cnt_cb_complet[,1] == "2018-04-01"]+x[cnt_cb_complet[,1] == "2018-07-01"]+x[cnt_cb_complet[,1] == "2018-10-01"])/4)*100
 
 scale_trim <- function(x, na.rm = FALSE) x/x[full_va[,1] == as.character(date_prec_prov)]*100
+scale_ga <- function(x, na.rm = FALSE) x/x[full_va[,1] == as.character(date_ga)]*100
 
 prov_detail <- ifelse(date_max_compte_def == date_max_compte_prov, "détaillés", "provisoires")
 
@@ -113,26 +122,37 @@ Ce rapport a été compilé automatiquement avec le logiciel ``R``, le `r format
 Le code source permettant de générer ce document est disponible sur Git [en cliquant ici](https://github.com/statjunior/Statjunior/tree/main/Conjoncture%20-%20comptes%20trimestriels/).
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
-#Télécharger et charger le fichier des imports et des exports en valeurs   
-file_export_val <- "data/t_exports_val.xls"
-file_import_val <- "data/t_imports_val.xls"
-#Télécharger et charger le fichier de décomposition des taux de marge des SNF 
+# #Télécharger et charger le fichier des imports et des exports en valeurs   
+# file_export_val <- "data/t_exports_val.xls"
+# file_import_val <- "data/t_imports_val.xls"
+# #Télécharger et charger le fichier de décomposition des taux de marge des SNF 
 file_decompo_tx_marge_snf <- "data/t_txmargesnf_val.xls"
-
-####Import des excels précédemment téléchargés à la main...
-#Export en valeurs 
-export_cb_val <- read_excel(file_export_val, 
-                       sheet = "Niveaux",skip = 7) |>
-  rename("DATE" = "...1", "export_energ"="DE", "export_raf"= "C2") |>
-  select(DATE, "export_energ", "export_raf") |>
-  filter(!is.na(export_energ))
-
-#Import en valeur
-import_cb_val <- read_excel(file_import_val, 
-                            sheet = "Niveaux",skip = 7) |>
-  rename("DATE" ="...1","import_energ"="DE", "import_raf"= "C2") |>
-  select(DATE, "import_energ", "import_raf") |>
-  filter(!is.na(import_energ))
+# 
+# ####Import des excels précédemment téléchargés à la main...
+# #Export en valeurs 
+# #exporation C2 valeur 011795454
+# #exportation DE valeur 011795462
+# #importation C2 valeur 011795496
+# #importation DE valeur 011795504
+# 
+# export_cb_val <-  insee::get_insee_idbank(c("011795454","011795462", "011795496", "011795504")) %>% 
+#   select(OBS_VALUE, DATE, IDBANK) %>% 
+#   pivot_wider(names_from = IDBANK, values_from = OBS_VALUE, id_cols = DATE) %>% 
+#   rename(export_energ= "011795462", export_raf = "011795454", import_energ = "011795504", import_raf = "011795496")
+# 
+# 
+# export_cb_val <- read_excel(file_export_val, 
+#                        sheet = "Niveaux",skip = 7) |>
+#   rename("DATE" = "...1", "export_energ"="DE", "export_raf"= "C2") |>
+#   select(DATE, "export_energ", "export_raf") |>
+#   filter(!is.na(export_energ))
+# 
+# #Import en valeur
+# import_cb_val <- read_excel(file_import_val, 
+#                             sheet = "Niveaux",skip = 7) |>
+#   rename("DATE" ="...1","import_energ"="DE", "import_raf"= "C2") |>
+#   select(DATE, "import_energ", "import_raf") |>
+#   filter(!is.na(import_energ))
 
 #Décomposition du taux de marge des SNF 
 decompo_tm_snf <- read_excel(file_decompo_tx_marge_snf, 
@@ -169,7 +189,7 @@ list_dataset <- get_dataset_list()
 
 #Contributions du PIB 
 list_idbank_pib = 
-  get_idbank_list("CNT-2014-PIB-EQB-RF") 
+  get_idbank_list("CNT-2020-PIB-EQB-RF") 
 
 list_idbank_pib_conso_men <- list_idbank_pib |>
   filter(SECT_INST_label_fr == "S14 - Ménages y compris entreprises individuelles" & VALORISATION_label_fr == "Volumes aux prix de l'année précédente chaînés" & OPERATION_label_fr == "P3 - Dépense de consommation finale")
@@ -179,7 +199,7 @@ list_idbank_pib_fbcf <- list_idbank_pib |>
 
 #Operations sur les Biens et Services : analyse sur les dépenses de consommation des ménages
 list_idbank_opebs_conso =
-  get_idbank_list("CNT-2014-OPERATIONS") %>%
+  get_idbank_list("CNT-2020-OPERATIONS") %>%
   filter(OPERATION_label_fr == "P3M - Dépenses de consommation des ménages") %>% 
   filter(grepl("A17", CNA_PRODUIT_label_fr) | CNA_PRODUIT_label_fr == "Tertiaire principalement marchand (GZ, HZ, IZ, JZ, KZ, LZ, MN, RU)" | 
            CNA_PRODUIT_label_fr == "Industrie (DE, C1, C2, C3, C4, C5)" |
@@ -188,7 +208,7 @@ list_idbank_opebs_conso =
   filter(VALORISATION == "L")
 
 list_idbank_opebs_fbcf =
-  get_idbank_list("CNT-2014-OPERATIONS") %>%
+  get_idbank_list("CNT-2020-OPERATIONS") %>%
   filter(OPERATION_label_fr =="P51 - Formation brute de capital fixe") %>% 
   filter(grepl("A17", CNA_PRODUIT_label_fr) | CNA_PRODUIT_label_fr == "Tertiaire principalement marchand (GZ, HZ, IZ, JZ, KZ, LZ, MN, RU)" | 
            CNA_PRODUIT_label_fr == "Industrie (DE, C1, C2, C3, C4, C5)" |
@@ -204,15 +224,15 @@ pib_conso_men = list_idbank_pib_conso_men %>% pull(idbank)
 pib_fbcf = list_idbank_pib_fbcf  %>% pull(idbank)
 
 ###Extraction des comptes de branches trimestriels 
-cb_2014 <- get_insee_dataset("CNT-2014-CB")
-cnt_cb_complet <- cb_2014
+cb_2020 <- get_insee_dataset("CNT-2020-CB")
+cnt_cb_complet <- cb_2020
 
 #############################Décomposition du PIB par composante (C+FBCF+X-M+VS)
-pib_2014 = 
+pib_2020 = 
   get_insee_idbank(pib) %>% 
   split_title() 
 
-pib_2014_bis <- pib_2014 |>
+pib_2020_bis <- pib_2020 |>
   mutate(TITLE_FR1 = case_when(
     TITLE_FR1 == "Produit intérieur brut total"~"pib_tot",
     TITLE_FR1 == "Dépenses de consommation totales"~"conso_tot", 
@@ -248,15 +268,24 @@ pib_2014_bis <- pib_2014 |>
     TITLE_FR3 = case_when(
       TITLE_FR3=="Valeur aux prix courants"~"val",
       TITLE_FR3 =="Volume aux prix de l'année précédente chaînés"~"vol"
-          )) |>
-  
+          ))
+
+croiss_pib <- filter(pib_2020_bis, TITLE_FR2 == "croissance_trim_pib") |>
+  select(DATE, OBS_VALUE, TITLE_FR2) %>% 
+  rename(TITLE_FR1 = TITLE_FR2)
+
+pib_2020_bis <- pib_2020_bis |> 
   filter(!is.na(TITLE_FR1)) |>
   mutate(TITLE_FR3 = ifelse(is.na(TITLE_FR3) & (TITLE_FR2 == "val" | TITLE_FR2 == "vol"), TITLE_FR2, TITLE_FR3))
 
 ###############################Calcul des contributions trimestrielles au PIB par composante
-contrib_pib_eer <- filter(pib_2014_bis, TITLE_FR2 =="contrib_pib") |>
+contrib_pib_eer <- filter(pib_2020_bis, TITLE_FR2 =="contrib_pib") |>
+  select(TITLE_FR1, OBS_VALUE, DATE)
+contrib_pib_eer <- rbind(contrib_pib_eer, croiss_pib)
+
+contrib_pib_eer <- contrib_pib_eer |>
   pivot_wider(names_from = TITLE_FR1, values_from = OBS_VALUE, id_cols = DATE) |>
-  mutate(croissance_pib = conso_men+conso_apu_ind+conso_apu_col+conso_isblsm+fbcf_tot+export_tot+vs_tot-import_tot) |>
+  rename(croissance_pib = croissance_trim_pib) |>
   select(DATE, croissance_pib, conso_men,conso_apu_ind,conso_apu_col,conso_isblsm,fbcf_tot,export_tot,vs_tot,import_tot) |>
   mutate(conso = conso_men+conso_apu_ind+conso_apu_col + conso_isblsm) |>
   select(-conso_men,-conso_apu_ind,-conso_apu_col,-conso_isblsm) |>
@@ -279,7 +308,7 @@ var_label(contrib_pib_eer) <- list(
 )
 
 ####################################Calcul des déflateurs des composantes du PIB 
-pib_eer <- filter(pib_2014_bis, TITLE_FR2 !="contrib_pib" | is.na(TITLE_FR2)) |>
+pib_eer <- filter(pib_2020_bis, TITLE_FR2 !="contrib_pib" | is.na(TITLE_FR2)) |>
   select(-TITLE_FR2) |>
   mutate(titre = paste0(TITLE_FR1,"_", TITLE_FR3)) |>
   pivot_wider(names_from = titre, values_from = OBS_VALUE, id_cols = DATE) |>
@@ -295,6 +324,21 @@ pib_eer <- filter(pib_2014_bis, TITLE_FR2 !="contrib_pib" | is.na(TITLE_FR2)) |>
   mutate(gliss_annuel_deflateur_export = ((deflateur_export/lag(deflateur_export, 4))-1)*100) |>
   mutate(gliss_annuel_deflateur_import = ((deflateur_import/lag(deflateur_import, 4))-1)*100) 
 
+decompo_conso_invest <- pib_2020_bis %>% 
+  filter(TITLE_FR3 == "vol") %>% 
+  filter(TITLE_FR1 == "export_tot" | TITLE_FR1 == "import_tot" | TITLE_FR1 == "conso_men" | TITLE_FR1 == "conso_apu_col" |  TITLE_FR1 == "fbcf_men" | TITLE_FR1 == "fbcf_enf" | TITLE_FR1 == "fbcf_apu") %>% 
+  filter(is.na(TITLE_FR2)) %>% 
+  select(DATE, OBS_VALUE, TITLE_FR1)
+
+fbcf_enf <- insee::get_insee_idbank("011794897") %>% 
+    select(DATE, OBS_VALUE) %>% 
+    mutate(TITLE_FR1 = "fbcf_enf")
+  
+decompo_conso_invest <- rbind(decompo_conso_invest,fbcf_enf) %>% 
+  pivot_wider(names_from = TITLE_FR1, values_from = OBS_VALUE, id_cols = DATE) 
+
+sscale_2021t4 <- function(x, na.rm = FALSE) x/x[decompo_conso_invest[,1] == "2021-10-01"]*100
+decompo_conso_invest_21 <- mutate_at(decompo_conso_invest, vars(-1), sscale_2021t4)
 
 ######### COMPTES NATIONAUX TRIMESTRIELS
 ####Secteurs
@@ -311,7 +355,7 @@ pib_eer <- filter(pib_2014_bis, TITLE_FR2 !="contrib_pib" | is.na(TITLE_FR2)) |>
 #EMP : Emploi ; EMPNS : Emploi non salarié 
 #DHES : Durée de travail salarié ; DHET : Durée de travail totale
 #VHTS : Volume total de travail salarié ; VHTT : Volume total de travail total 
-cnt_cb_complet <- cb_2014|>
+cnt_cb_complet <- cb_2020 |>
 filter(CNA_PRODUIT == "SMNA-CNT" 
          |CNA_PRODUIT =="DI-CNT"
          |CNA_PRODUIT =="A17-FZ"
@@ -328,17 +372,19 @@ filter(CNA_PRODUIT == "SMNA-CNT"
   mutate(CNA_PRODUIT  = replace(CNA_PRODUIT, CNA_PRODUIT=="A17-AZ", "ag")) |>
   mutate(CNA_PRODUIT  = replace(CNA_PRODUIT, CNA_PRODUIT=="DSM-CNT", "term")) |>
   mutate(CNA_PRODUIT  = replace(CNA_PRODUIT, CNA_PRODUIT=="DSN-CNT", "ternm")) |>
-  filter(OPERATION == "B1" | OPERATION == "B2" |  OPERATION == "EMP" | OPERATION == "EMPNS" |  OPERATION == "DHES" |  OPERATION == "DHET" |  OPERATION == "VHTS" |  OPERATION == "VHTT" |  OPERATION == "D1" | OPERATION == "P1E") |>
+  filter(OPERATION == "B1" | OPERATION == "B2" |  OPERATION == "EMP" | OPERATION == "EMPNS" |  OPERATION == "EMPS" | OPERATION == "DHES" |  OPERATION == "DHET" |  OPERATION == "VHTS" |  OPERATION == "VHTT" |  OPERATION == "D1" | OPERATION == "D11" | OPERATION == "P1E") |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="B1", "va")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="P1E", "production")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="B2", "ebe")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="EMP", "emp")) |>
+   mutate(OPERATION  = replace(OPERATION, OPERATION=="EMPS", "emps")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="EMPNS", "empns")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="DHES", "duree_travail_sal")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="DHET", "duree_travail_tot")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="VHTS", "volume_travail_sal")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="VHTT", "volume_travail_tot")) |>
   mutate(OPERATION  = replace(OPERATION, OPERATION=="D1", "wage")) |>
+  mutate(OPERATION  = replace(OPERATION, OPERATION=="D11", "wagebrut")) |>
   mutate(VALORISATION = replace(VALORISATION, UNIT_MEASURE =="L", "vol")) |>
   mutate(VALORISATION = replace(VALORISATION, UNIT_MEASURE =="V", "val")) |>
   mutate(VALORISATION = replace(VALORISATION, UNIT_MEASURE =="SO", "so")) |>
@@ -355,11 +401,11 @@ filter(CNA_PRODUIT == "SMNA-CNT"
 # cnt_indus$DATE <- str_replace(cnt_indus$DATE,"-07-", "-09-")
 # cnt_indus$DATE <- str_replace(cnt_indus$DATE,"-10-", "-12-")
 cnt_cb_complet$DATE <-as.Date(paste(cnt_cb_complet$DATE,1,sep="-"))
-cnt_cb_complet <- mutate_at(cnt_cb_complet,  vars(7:118), list(~ recode(., `NULL` = 0))) |>
-  mutate_at(vars(7:118), as.numeric) |>
-  mutate_at(vars(7:118), ~replace(., is.na(.), 0)) |>
+cnt_cb_complet <- mutate_at(cnt_cb_complet,  vars(7:141), list(~ recode(., `NULL` = 0))) |>
+  mutate_at(vars(7:141), as.numeric) |>
+  mutate_at(vars(7:141), ~replace(., is.na(.), 0)) |>
   group_by(DATE) |>
-  summarise_at(vars(6:117),              # Specify column
+  summarise_at(vars(6:140),              # Specify column
                list(name = sum)) 
 
 names(cnt_cb_complet) = gsub(pattern = "_name", replacement = "", x = names(cnt_cb_complet))
@@ -394,8 +440,8 @@ cnt_cb_complet <- cnt_cb_complet |>
   mutate(prod_tete_ternm = va_ternm_L/emp_term_ind*100) |>
   mutate(prod_tete_marng = va_marng_L/emp_marng_ind*100) |>
   mutate(prod_tete_tot = va_tot_L/emp_tot_ind*100) |>
-  mutate(smpt_cnt_tot = wage_tot/emp_tot_ind*100) |>
-  mutate(smpt_cnt_marng = wage_marng/emp_marng_ind*100) |>
+  # mutate(smpt_cnt_tot = wagebrut_tot/emp_tot_ind*100) |>
+  mutate(smpt_cnt_marng = wagebrut_marng/emp_marng_ind*100) |>
   
   mutate(tx_marge_ag = ebe_ag/va_ag_V*100) |>
   mutate(tx_marge_constr = ebe_constr/va_constr_V*100) |>
@@ -428,7 +474,7 @@ cb_complet_base100 <- mutate_at(cnt_cb_complet, vars(2:137), scale_2019t4)
 
 
 ###############################"Décomposition du CNT manufacturier 
-cnt_indus <- cb_2014|>
+cnt_indus <- cb_2020|>
   filter(CNA_PRODUIT == "DIM-CNT" 
          |CNA_PRODUIT =="DI-CNT"
          |CNA_PRODUIT =="A17-C1"
@@ -532,7 +578,7 @@ cnt_indus <- cnt_indus |>
 cnt_indus_base100 <- mutate_at(cnt_indus, vars(2:163), scale_2019t4)
 
 ##################################### Décomposition du CNT des services
-cnt_service <- cb_2014|>
+cnt_service <- cb_2020|>
   filter(CNA_PRODUIT == "DSM-CNT"  
          |CNA_PRODUIT =="DSN-CNT"
          |CNA_PRODUIT =="A17-GZ"
@@ -639,6 +685,7 @@ cnt_service <- cnt_service |>
 cnt_service_base100 <- mutate_at(cnt_service, vars(2:181), scale_2019t4)
 
 pib_eer_2019 <- mutate_at(pib_eer, vars(2:36), scale_2019t4)
+pib_eer_2021 <- mutate_at(pib_eer, vars(2:36), scale_2021t4)
 
 ```
 
@@ -650,7 +697,7 @@ pib_eer_2019 <- mutate_at(pib_eer, vars(2:36), scale_2019t4)
 ```{r,fig.dim = c(14, 9)}
 ##################CROISSANCE TRIMESTRIELLE
 ###Croissance trimestrielle du PIB + Composantes 
-croiss_trim_pib <-  ggplot(data=contrib_pib_eer, aes(x=DATE, y=value, fill=forcats::fct_rev(Composante))) +
+croiss_trim_pib <-  ggplot(data=subset(contrib_pib_eer, DATE >= as.Date("2021-10-01")), aes(x=DATE, y=value, fill=forcats::fct_rev(Composante))) +
   geom_col()+
   geom_line(aes(y = croissance_pib)) + geom_point(aes(y = croissance_pib)) +
   labs(title = "Croissance trimestrielle du PIB et contributions à la croissance", 
@@ -680,16 +727,16 @@ croiss_trim_pib <-  ggplot(data=contrib_pib_eer, aes(x=DATE, y=value, fill=forca
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
         axis.title.y = element_text(hjust = 0.5))+
-  scale_x_date(limits = as.Date(c("2020-11-01", NA))) +
+  scale_x_date(limits = as.Date(c("2021-08-01", NA))) +
   scale_fill_discrete(breaks=c('Consommation', 'Investissement', 'Export', "Import", "Variations de stocks"))+
   #scale_color_manual(values=c("#F8766D","#C77CFF", "#00BA38", "#D39200", "#00B8E7"))+
-  ylim(-2.5,5)
+  ylim(-2.5,2.5)
 
 print(croiss_trim_pib)
 ```
 
 
-## Evolution des composantes du PIB en volume par rapport au T4-2019 
+## Evolution des composantes du PIB en volume par rapport au T4-2019
 ```{r,fig.dim = c(14, 9)}
 plot_niv_composante_pib <-ggplot(data = pib_eer_2019,
                              aes(x = DATE)) +
@@ -733,6 +780,99 @@ plot_niv_composante_pib <-ggplot(data = pib_eer_2019,
 print(plot_niv_composante_pib )
 ```
 
+## Evolution des composantes du PIB en volume par rapport au T4-2021
+```{r,fig.dim = c(14, 9)}
+
+plot_niv_composante_pib <-ggplot(data = pib_eer_2021,
+                             aes(x = DATE)) +
+  geom_line(aes(y = pib_tot_vol, color = "PIB"), size = 1.5) + 
+  geom_line(aes(y = conso_tot_vol, color = "Consommation"), size = 1.1) + 
+  geom_line(aes(y = fbcf_tot_vol, color = "Investissement"), size = 1.1) + 
+  geom_line(aes(y = export_tot_vol, color = "Export"), size = 1.1) + 
+  geom_line(aes(y = import_tot_vol, color = "Import"), size = 1.1) + 
+  
+  #geom_line(aes(y = solde_commercial, color = "Import"), size = 1.1) + 
+  # geom_point(aes(y = pib_tot_vol, color = "PIB"), size = 1.3) + 
+  # geom_point(aes(y = conso_tot_vol, color = "Consommation"), size = 1.1) + 
+  # geom_point(aes(y = fbcf_tot_vol, color = "Investissement"), size = 1.1) + 
+  # geom_point(aes(y = export_tot_vol, color = "Export"), size = 1.1) + 
+  # geom_point(aes(y = import_tot_vol, color = "Import"), size = 1.1) + 
+  labs(title = "Evolution des composantes du PIB depuis fin 2021", 
+    
+       subtitle = paste("Lecture: Au",date_prov_litt, ", le PIB croît de", valeur <- pib_eer_2021 %>% filter(DATE == max(DATE)) %>% mutate(legend = pib_tot_vol-100) %>% pull(legend) %>% round(digits = 1), "% depuis le dernier trimestre 2021. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"), 
+                        
+       y = "Base 100 au 4e trimestre 2021", x = "Date") +
+  scale_x_date(limits = as.Date(c("2021-10-01", NA))) + 
+  scale_color_manual(values = c("PIB"="red", "Consommation" = "orange", "Investissement" = "#00B8E7", "Export" ="#00BA38", "Import" = "#C77CFF", "Investissement" = "#D39200"))+
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+        legend.position="bottom",
+        plot.title.position ="plot",
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=12),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", face = "italic"),
+        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+        axis.title.y = element_text(hjust = 0.5))+
+  ylim(96,110)
+
+print(plot_niv_composante_pib )
+```
+
+## Evolution des composantes de la demande intérieure par secteur institutionnel depuis le T4-2021
+```{r,fig.dim = c(14, 9)}
+
+plot_niv_composante_pib <-ggplot(data = decompo_conso_invest_21,
+                             aes(x = DATE)) +
+  geom_line(aes(y = conso_men, color = "Consommation des ménages"), size = 1.5) + 
+  geom_line(aes(y = conso_apu_col, color = "Consommation collective des APU"), size = 1.1) + 
+  geom_line(aes(y = fbcf_men, color = "Investissement des ménages"), size = 1.1) + 
+  geom_line(aes(y = fbcf_enf, color = "Investissement des entreprises non financières"), size = 1.1) +
+  geom_line(aes(y = fbcf_apu, color = "Investissement des APU"), size = 1.1) +
+  # geom_line(aes(y = export_tot, color = "Export"), size = 1.1) +
+  # geom_line(aes(y = import_tot, color = "Import"), size = 1.1) +
+  
+  #geom_line(aes(y = solde_commercial, color = "Import"), size = 1.1) + 
+  # geom_point(aes(y = pib_tot_vol, color = "PIB"), size = 1.3) + 
+  # geom_point(aes(y = conso_tot_vol, color = "Consommation"), size = 1.1) + 
+  # geom_point(aes(y = fbcf_tot_vol, color = "Investissement"), size = 1.1) + 
+  # geom_point(aes(y = export_tot_vol, color = "Export"), size = 1.1) + 
+  # geom_point(aes(y = import_tot_vol, color = "Import"), size = 1.1) + 
+  labs(title = "Evolution de la demande intérieure par secteur institutionnel depuis fin 2021", 
+    
+       subtitle = paste("Lecture: Au",date_prov_litt, ", l'investissement des ménages baisse de", valeur <- decompo_conso_invest_21 %>% filter(DATE == max(DATE)) %>% mutate(legend = fbcf_men-100) %>% pull(legend) %>% round(digits = 1), "% depuis le dernier trimestre 2021. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"), 
+                        
+       y = "Base 100 au 4e trimestre 2021", x = "Date") +
+  scale_x_date(limits = as.Date(c("2021-10-01", NA))) + 
+  # scale_color_manual(values = c("PIB"="red", "Consommation" = "orange", "Investissement" = "#00B8E7", "Export" ="#00BA38", "Import" = "#C77CFF", "Investissement" = "#D39200"))+
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 12,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+        legend.position="bottom",
+        plot.title.position ="plot",
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=12),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", face = "italic"),
+        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+        axis.title.y = element_text(hjust = 0.5))+
+  ylim(80,115)
+
+print(plot_niv_composante_pib )
+```
+
+
 ## Valeur ajoutée par branche depuis fin 2019 
 ```{r,fig.dim = c(14, 9)}
 # Décomposition par branches 
@@ -775,7 +915,8 @@ full_va_2019 <- pivot_longer(full_va_2019,cols=c(-1), names_to = "Composante", v
     Composante == "va_ternm_L"~"Tertiaire non marchand",
     Composante == "va_ag_L"~"Agriculture"
     
-  ))
+  )) %>% 
+  mutate(value = ifelse(Composante == "Cokéfaction-raffinage", NA_real_, value))
 
 ###Graphique VA par rapport à 2019
 valeur <- full_va_2019 |> filter(DATE == max(DATE), Composante == "Marchand non agricole") |> pull(value) |> round(digits =1)
@@ -813,6 +954,77 @@ plot_va_sectorielle_2019t4 <-ggplot(data = full_va_2019,
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
         axis.title.y = element_text(hjust = 0.5))
 plot_va_sectorielle_2019t4
+rm(valeur)
+```
+
+## Valeur ajoutée par branche en glissement annuel
+```{r,fig.dim = c(14, 9)}
+# Décomposition par branches 
+#####VA par branche en GA
+full_va_trim <- mutate_at(full_va, vars(-1), scale_ga)
+full_va_trim <- mutate_at(full_va_trim, vars(-1), ~.-100) |>
+filter(DATE == max(DATE)) |>
+  mutate(DATE = as.character(DATE))
+full_va_trim <- pivot_longer(full_va_trim,cols=c(-1), names_to = "Composante", values_to = "value") |>
+  mutate(Composante = case_when(
+    Composante == "va_tot_L"~"Global",
+    Composante == "va_marng_L"~"Marchand non agricole",
+    Composante == "va_indus_L"~"Industrie",
+    Composante == "va_alim_L"~"Agro-alimentaire",
+    Composante == "va_energ_L"~"Energie, eau, déchets",
+    Composante == "va_raf_L"~"Cokéfaction-raffinage",
+    Composante == "va_info_L"~"Biens d'équipement",
+    Composante == "va_mat_trans_L"~"Matériels de transport",
+    Composante == "va_constr_L"~"Construction",
+    Composante == "va_term_L"~"Tertiaire marchand",
+    Composante == "va_com_L"~"Commerce",
+    Composante == "va_service_trans_L"~"Services de transport",
+    Composante == "va_heb_L"~"Hébergement-restauration",
+    Composante == "va_infocom_L"~"Info-communication",
+    Composante == "va_fin_L"~"Services financiers",
+    Composante == "va_imm_L"~"Services immobiliers",
+    Composante == "va_sciad_L"~"Services aux entreprises",
+    Composante == "va_ternm_L"~"Tertiaire non marchand",
+    Composante == "va_ag_L"~"Agriculture"
+    
+  ))
+
+###Graphique VA par rapport à trim
+valeur <- full_va_trim |> filter(DATE == max(DATE), Composante == "Marchand non agricole") |> pull(value) |> round(digits =1)
+
+plot_va_sectorielle_trim <-ggplot(data = full_va_trim,
+                               aes(x = forcats::fct_relevel(Composante, c("Global", "Marchand non agricole","Industrie","Agro-alimentaire",
+                                                                       "Energie, eau, déchets","Cokéfaction-raffinage","Biens d'équipement",
+                                                                           "Matériels de transport", "Construction",
+                                                                          "Tertiaire marchand", "Commerce",  "Services de transport",
+                                                                          "Hébergement-restauration","Info-communication","Services financiers",
+                                                                           "Services immobiliers","Services aux entreprises","Tertiaire non marchand","Agriculture"), after = 1),
+                                y = value, fill = DATE)) +
+  geom_col(position = "dodge") +
+  labs(title = "Evolution de la Valeur Ajoutée par secteur en glissement annuel", 
+       
+       subtitle = paste("Lecture: Au",date_prov_litt, ", la valeur ajoutée des secteurs marchands non agricoles",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>100, round(valeur,2), round(valeur,2)), "% sur un an. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
+       
+       y = "Evolution sur un an (%)", x = "Secteur") +
+  #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
+  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+               plot_title_size = 18,
+               #subtitle_size = 9.5,
+               base_size = 12,
+               axis_title_size = 11,
+               axis_text_size = 12,
+               base_family = "Helvetica")  +
+  theme(
+        legend.position="bottom",
+        plot.title.position ="plot",
+        axis.text.x = element_text(angle = 90),
+        legend.title = element_text(size=9), 
+        legend.text = element_text(size=12),
+        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+        plot.subtitle = element_text(color = "#333333", face = "italic"),
+        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+        axis.title.y = element_text(hjust = 0.5))
+plot_va_sectorielle_trim
 rm(valeur)
 ```
 
@@ -996,8 +1208,9 @@ print(plot_niv_deflateurs)
 # Solde des échanges extérieurs de la France
 
 ```{r,fig.dim = c(14, 9)}
+
 ####Déficit commerical en Biens et services (avec et sans énergie)
-def_commercial <- mutate(pib_2014_bis, compo = paste0(TITLE_FR1, "_",TITLE_FR3)) |>
+def_commercial <- mutate(pib_2020_bis, compo = paste0(TITLE_FR1, "_",TITLE_FR3)) |>
   filter(is.na(TITLE_FR2)) |>
   filter(compo == "import_tot_val" |compo == "import_tot_vol"|compo == "export_tot_vol"|compo == "export_tot_val") |>
   select(DATE, OBS_VALUE, compo) |>
@@ -1008,8 +1221,11 @@ def_commercial <- left_join(def_commercial, va_val_vol, by = "DATE") |>
   select(-va_valeur_marng, -va_tot_L, -va_marng_L) |>
   mutate(def_commercial_vatot = def_commercial_valeur/va_valeur_tot*100)
 
-def_commercial_energie <- left_join(import_cb_val, export_cb_val, by ="DATE") |>
-  mutate(def_energ=(export_energ+export_raf-import_raf-import_energ)*1000) 
+def_commercial_energie <- insee::get_insee_idbank(c("011795454","011795462", "011795496", "011795504")) %>% 
+  select(OBS_VALUE, DATE, IDBANK) %>% 
+  pivot_wider(names_from = IDBANK, values_from = OBS_VALUE, id_cols = DATE) %>% 
+  rename(export_energ= "011795462", export_raf = "011795454", import_energ = "011795504", import_raf = "011795496") %>% 
+ mutate(def_energ=(export_energ+export_raf-import_raf-import_energ)) 
 
 def_commercial_energie$DATE <- str_replace(def_commercial_energie$DATE,"T1", "-01-01")
 def_commercial_energie$DATE <- str_replace(def_commercial_energie$DATE,"T2", "-04-01")
@@ -1101,7 +1317,7 @@ plot_conso_cb_2019 <-ggplot(data = cb_branche_conso_men,
        
        subtitle = paste("Lecture: Au",date_prov_litt, ", la consommation des ménages globale",ifelse(valeur>0, "progresse", "recule"),"de", ifelse(valeur>0, round(valeur,2), round(valeur,2)), "% par rapport à la moyenne de l'année 2019. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats", ifelse(date_max_compte_def==date_max_compte_prov, "détaillés", "provisoires"), "du", date_prov_trim, ") \nCalculs et graphiques : @statjunior"),
        
-       y = "Variation par rapport à 2019 (%)", x = "Secteur") +
+       y = "Variation par rapport à 2019 (%)", x = "Produit") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) +
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
                plot_title_size = 18,
@@ -1251,7 +1467,7 @@ plot_alim_trim <- ggplot(data=analyse_conso_alim_vol, aes(x=DATE, y=value, fill 
         plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
         axis.title.y = element_text(hjust = 0.5)) +
-  scale_x_date(limits = as.Date(c("2000-01-01", NA))) +ylim(39, 47) 
+  scale_x_date(limits = as.Date(c("2000-01-01", NA))) +ylim(39, NA) 
 plot_alim_trim
 ```
 
@@ -1508,7 +1724,7 @@ valeur <- masse_salariale |> filter(DATE == date_max_compte_def) |> pull(wage_ma
 
 plot_masse_salariale<-ggplot(data = masse_salariale,
                        aes(x = DATE)) +
-  geom_line(aes(y = wage_marng_reel, color = "Masse salariale réelle (déflateur conso des ménages)"), size = 1.2) + 
+  geom_line(aes(y = wage_marng_reel_va, color = "Masse salariale réelle (déflateur prix de VA)"), size = 1.2) + 
   #geom_line(aes(y = wage_marng_reel_va, color = "Masse salariale réelle (déflateur VA)"), size = 1.2) + 
   geom_line(aes(y = emp_marng_ind, color = "Emploi"), size = 1.3) + 
   #geom_line(aes(y = smb_tertiaire, color = "SMB Tertiaire"), size = 1) + 
@@ -1518,7 +1734,7 @@ plot_masse_salariale<-ggplot(data = masse_salariale,
        
        y = "Base 100 au 2e trimestre 2017", x = "Date") +
   scale_x_date(limits = as.Date(c("2017-04-01", date_max_compte_def))) + 
-  scale_color_manual(values = c("Masse salariale réelle (déflateur conso des ménages)" = "red", 
+  scale_color_manual(values = c("Masse salariale réelle (déflateur prix de VA)" = "red", 
                                 "Emploi" = "blue"
                                 #, "Masse salariale réelle (déflateur VA)" = "purple"
                                 ))+
@@ -1540,7 +1756,7 @@ plot_masse_salariale<-ggplot(data = masse_salariale,
         axis.title.y = element_text(hjust = 0.5)) + 
   ylim(80, 115)
 plot_masse_salariale
-rm(valeur,valeur2)
+rm(valeur)
 ```
 
 ## Volume de travail global et productivité du travail depuis 1990 
@@ -1579,7 +1795,7 @@ plot_vol_travail_prod <-ggplot(data = masse_salariale90,
         plot.subtitle = element_text(color = "#333333", size = 12,face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
         axis.title.y = element_text(hjust = 0.5)) +
-  ylim(80,175) 
+  ylim(80,180) 
 
 print(plot_vol_travail_prod)
 rm(valeur)
@@ -1594,16 +1810,16 @@ valeur2 <- masse_salariale |> filter(DATE == date_max_compte_def) |> pull(prod_t
 
 plot_smpt_productivite <-ggplot(data = masse_salariale,
                                 aes(x = DATE)) +
-  geom_line(aes(y = smpt_reel, color = "Salaire Moyen par Tête réel"), size = 1.2) + 
+  geom_line(aes(y = smpt_reel, color = "Masse salariale par Tête réelle"), size = 1.2) + 
   geom_line(aes(y = prod_tete_marng, color = "Productivité par tête"), size = 1.2) + 
   #geom_line(aes(y = smb_tertiaire, color = "SMB Tertiaire"), size = 1) + 
-  labs(title = "Evolution de la productivité du travail et du pouvoir d'achat du Salaire Moyen par Tête", 
+  labs(title = "Evolution de la productivité du travail et de la masse salariale réelle par tête", 
 
-       subtitle = paste("Lecture: Au",date_def_litt, ", le pouvoir d'achat du salaire moyen par tête", ifelse(valeur>100, "progresse", "recule"), "de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)),"% (et la productivité par tête",ifelse(valeur>100, "progresse", "recule"), "de",ifelse(valeur2>100, round(valeur2-100,2), round(100-valeur2,2)), "% par rapport au 4e trimestre 2019. \nChamp : Secteurs marchands non agricoles \nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Au",date_def_litt, ", le pouvoir d'achat de la masse salariale réelle par tête", ifelse(valeur>100, "progresse", "recule"), "de", ifelse(valeur>100, round(valeur-100,2), round(100-valeur,2)),"% (et la productivité par tête",ifelse(valeur>100, "progresse", "recule"), "de",ifelse(valeur2>100, round(valeur2-100,2), round(100-valeur2,2)), "% par rapport au 4e trimestre 2019. \nChamp : Secteurs marchands non agricoles \nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Base 100 au 1er trimestre 2000", x = "Date") +
   scale_x_date(limits = as.Date(c("2000-01-01", NA))) + 
-  scale_color_manual(values = c("Salaire Moyen par Tête réel" = "red", "Productivité par tête" = "blue"))+
+  scale_color_manual(values = c("Masse salariale par Tête réelle" = "red", "Productivité par tête" = "blue"))+
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
                plot_title_size = 18,
                #subtitle_size = 9.5,
@@ -1668,7 +1884,8 @@ full_prod_travail_2019 <- pivot_longer(full_prod_travail_2019,cols=c(-1), names_
     Composante == "prod_travail_ternm"~"Tertiaire non marchand",
     Composante == "prod_travail_ag"~"Agriculture"
     
-  ))
+  )) %>% 
+  mutate(value = ifelse(Composante == "Cokéfaction-raffinage", NA_real_, value))
 
 valeur <- full_prod_travail_2019 %>%  filter(DATE == date_max_compte_def, Composante == "Marchand non agricole") %>% pull(value) %>%  round(digits =1)
 
@@ -1700,7 +1917,7 @@ plot_prod_travail_sectorielle_2019t4 <-ggplot(data = full_prod_travail_2019,
         plot.title.position ="plot",
         axis.text.x = element_text(angle = 90),
         legend.title = element_text(size=9), 
-        legend.text = element_text(size=12),
+        legend.text = element_text(size=14),
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
@@ -1789,7 +2006,7 @@ plot_heures_travaillées_2019t4 <-ggplot(data = full_heures_2019,
         plot.title.position ="plot",
         axis.text.x = element_text(angle = 90),
         legend.title = element_text(size=9), 
-        legend.text = element_text(size=7),
+        legend.text = element_text(size=14),
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
@@ -1856,7 +2073,7 @@ plot_va_prod_heures_2019t4 <-ggplot(data = full_va_prod_2019,
         plot.title.position ="plot",
         axis.text.x = element_text(angle = 90),
         legend.title = element_text(size=9), 
-        legend.text = element_text(size=7),
+        legend.text = element_text(size=14),
         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
         plot.subtitle = element_text(color = "#333333", face = "italic"),
         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
@@ -1900,62 +2117,62 @@ print(plot_tx_marge_snf)
 ```
 
 
-## Décomposition du taux de marge par contribution (productivité, masse salariale, cotisations sociales, termes de l'échange, autres facteurs)
-```{r,fig.dim = c(14, 9)}
-###Décomposition par contribution à l'évolution des taux de marge 
-decompo_tm_snf_2018t4 <- filter(decompo_tm_snf, DATE >as.Date('2018-10-10')) |>
-  mutate(sum_var_tx_marge = sum(var_tx_marge)) |>
-  mutate(sum_prod = sum(contrib_productivite)) |>
-  mutate(sum_sal = sum(contrib_sal_reel)) |>
-  mutate(sum_cotsoc = sum(contrib_cot_soc)) |>
-  mutate(sum_echange = sum(contrib_terme_echange)) |>
-  mutate(sum_autres = sum(contrib_autres_facteurs)) |>
-  filter(DATE == date_max_compte_def) |>
-  select(DATE, sum_var_tx_marge, sum_prod, sum_sal, sum_cotsoc, sum_echange, sum_autres) |> 
-  rename(c("Taux de marge"="sum_var_tx_marge", "Productivité" = sum_prod, "Masse salariale réelle" = sum_sal, 
-         "Cotisations sociales" = "sum_cotsoc", "Termes de l'échange" = "sum_echange", "Autres facteurs" = sum_autres)) |>
-  pivot_longer(cols=c(-1), names_to = "Composante", values_to = "value")
-  
-valeur <- decompo_tm_snf_2018t4 |> filter(DATE == date_max_compte_def, Composante == "Taux de marge") |> pull(value) |> round(digits =1)
-valeur2 <- decompo_tm_snf_2018t4 |> filter(DATE == date_max_compte_def, Composante == "Cotisations sociales") |> pull(value) |> round(digits =1)
+<!-- ## Décomposition du taux de marge par contribution (productivité, masse salariale, cotisations sociales, termes de l'échange, autres facteurs) -->
+<!-- ```{r,fig.dim = c(14, 9)} -->
+<!-- ###Décomposition par contribution à l'évolution des taux de marge  -->
+<!-- decompo_tm_snf_2018t4 <- filter(decompo_tm_snf, DATE >as.Date('2018-10-10')) |> -->
+<!--   mutate(sum_var_tx_marge = sum(var_tx_marge)) |> -->
+<!--   mutate(sum_prod = sum(contrib_productivite)) |> -->
+<!--   mutate(sum_sal = sum(contrib_sal_reel)) |> -->
+<!--   mutate(sum_cotsoc = sum(contrib_cot_soc)) |> -->
+<!--   mutate(sum_echange = sum(contrib_terme_echange)) |> -->
+<!--   mutate(sum_autres = sum(contrib_autres_facteurs)) |> -->
+<!--   filter(DATE == date_max_compte_def) |> -->
+<!--   select(DATE, sum_var_tx_marge, sum_prod, sum_sal, sum_cotsoc, sum_echange, sum_autres) |>  -->
+<!--   rename(c("Taux de marge"="sum_var_tx_marge", "Productivité" = sum_prod, "Masse salariale réelle" = sum_sal,  -->
+<!--          "Cotisations sociales" = "sum_cotsoc", "Termes de l'échange" = "sum_echange", "Autres facteurs" = sum_autres)) |> -->
+<!--   pivot_longer(cols=c(-1), names_to = "Composante", values_to = "value") -->
 
-plot_decompo_tm_snf_2018 <-ggplot(data = decompo_tm_snf_2018t4,
-                                        aes(x = forcats::fct_relevel(Composante, c("Taux de marge", "Productivité","Masse salariale réelle","Cotisations sociales",
-                                                                                   "Termes de l'échange","Autres facteurs"), after = 1),
-                                            y = value, fill = forcats::fct_relevel(Composante, c("Taux de marge", "Productivité","Masse salariale réelle","Cotisations sociales",
-                                                                                                 "Termes de l'échange","Autres facteurs"), after = 1))) +
-                                            #fill=factor(ifelse(Composante=="Taux de marge","Highlighted","Normal")
-                                           
-  geom_col(position = "dodge", show.legend = FALSE) +
-  labs(title = "Décomposition de la variation du taux de marge des sociétés non financières depuis la fin 2018", 
-       
-       subtitle = paste("Lecture : Entre le 4e trimestre 2018 et le", date_def_litt, "le taux de marge des SNF",ifelse(valeur>0, "augmente", "baisse"),"de", valeur, "points. \n Lecture : La baisse du taux de cotisation employeur contribue pour", valeur2, "points à la variation du taux de marge. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+<!-- valeur <- decompo_tm_snf_2018t4 |> filter(DATE == date_max_compte_def, Composante == "Taux de marge") |> pull(value) |> round(digits =1) -->
+<!-- valeur2 <- decompo_tm_snf_2018t4 |> filter(DATE == date_max_compte_def, Composante == "Cotisations sociales") |> pull(value) |> round(digits =1) -->
 
-       y = "Variation en points de pourcentage par rapport au 4e trimestre 2018", x = "Facteur de contribution") +
-  #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) 
-  scale_fill_manual(values=c("orange", "#00B8E7", "#00B8E7", "#00B8E7", "#00B8E7", "#00B8E7"))+
-  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
-               plot_title_size = 16,
-               #subtitle_size = 9.5,
-               base_size = 12,
-               axis_title_size = 11,
-               axis_text_size = 12,
-               base_family = "Helvetica")  +
-  theme(
-        legend.position="bottom",
-        plot.title.position ="plot",
-        legend.title = element_text(size=9), 
-        legend.text = element_text(size=12),
-        plot.title = element_text(color = "#333333", size = 16, face = "bold"),
-        plot.subtitle = element_text(color = "#333333", face = "italic"),
-        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
-        axis.title.y = element_text(hjust = 0.5))
-print(plot_decompo_tm_snf_2018)
-rm(valeur1, valeur2)
-```
+<!-- plot_decompo_tm_snf_2018 <-ggplot(data = decompo_tm_snf_2018t4, -->
+<!--                                         aes(x = forcats::fct_relevel(Composante, c("Taux de marge", "Productivité","Masse salariale réelle","Cotisations sociales", -->
+<!--                                                                                    "Termes de l'échange","Autres facteurs"), after = 1), -->
+<!--                                             y = value, fill = forcats::fct_relevel(Composante, c("Taux de marge", "Productivité","Masse salariale réelle","Cotisations sociales", -->
+<!--                                                                                                  "Termes de l'échange","Autres facteurs"), after = 1))) + -->
+<!--                                             #fill=factor(ifelse(Composante=="Taux de marge","Highlighted","Normal") -->
+
+<!--   geom_col(position = "dodge", show.legend = FALSE) + -->
+<!--   labs(title = "Décomposition de la variation du taux de marge des sociétés non financières depuis la fin 2018",  -->
+
+<!--        subtitle = paste("Lecture : Entre le 4e trimestre 2018 et le", date_def_litt, "le taux de marge des SNF",ifelse(valeur>0, "augmente", "baisse"),"de", valeur, "points. \n Lecture : La baisse du taux de cotisation employeur contribue pour", valeur2, "points à la variation du taux de marge. \nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"), -->
+
+<!--        y = "Variation en points de pourcentage par rapport au 4e trimestre 2018", x = "Facteur de contribution") + -->
+<!--   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50"))  -->
+<!--   scale_fill_manual(values=c("orange", "#00B8E7", "#00B8E7", "#00B8E7", "#00B8E7", "#00B8E7"))+ -->
+<!--   theme_ipsum( plot_margin = margin(0, 0, 0, 0), -->
+<!--                plot_title_size = 16, -->
+<!--                #subtitle_size = 9.5, -->
+<!--                base_size = 12, -->
+<!--                axis_title_size = 11, -->
+<!--                axis_text_size = 12, -->
+<!--                base_family = "Helvetica")  + -->
+<!--   theme( -->
+<!--         legend.position="bottom", -->
+<!--         plot.title.position ="plot", -->
+<!--         legend.title = element_text(size=9),  -->
+<!--         legend.text = element_text(size=12), -->
+<!--         plot.title = element_text(color = "#333333", size = 16, face = "bold"), -->
+<!--         plot.subtitle = element_text(color = "#333333", face = "italic"), -->
+<!--         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x -->
+<!--         axis.title.y = element_text(hjust = 0.5)) -->
+<!-- print(plot_decompo_tm_snf_2018) -->
+<!-- rm(valeur1, valeur2) -->
+<!-- ``` -->
 
 
-## Evolution du taux de marge par secteur par rapport à l'année 2018
+## Evolution du taux de marge par secteur par rapport à l'année 2019
 ```{r,fig.dim = c(14, 9)}
 full_tx_marge <- select(cnt_cb_complet, DATE, tx_marge_tot, tx_marge_marng, tx_marge_ag, tx_marge_man, tx_marge_term, tx_marge_ternm)
 tx_marge_man <- select(cnt_indus, DATE, tx_marge_alim, tx_marge_constr, tx_marge_energ, tx_marge_indus, tx_marge_info, tx_marge_raf, tx_marge_trans)|>
@@ -1969,7 +2186,7 @@ full_tx_marge <- full_tx_marge |>
          tx_marge_term, tx_marge_com, tx_marge_service_trans, tx_marge_heb, tx_marge_infocom, tx_marge_fin, tx_marge_imm, tx_marge_sciad, tx_marge_ternm, tx_marge_ag) |>
   relocate(DATE, tx_marge_tot, tx_marge_marng, tx_marge_indus, tx_marge_alim, tx_marge_energ, tx_marge_raf, tx_marge_info, tx_marge_mat_trans, tx_marge_energ, tx_marge_constr, tx_marge_term, tx_marge_com, tx_marge_service_trans, tx_marge_heb, tx_marge_infocom, tx_marge_fin, tx_marge_imm, tx_marge_sciad, tx_marge_ternm, tx_marge_ag, .before = NULL)
 
-full_tx_marge_2018t4 <- mutate_at(full_tx_marge, vars(-1), ~.-(.[full_tx_marge[,1] == "2018-10-01"]+.[full_tx_marge[,1] == "2018-07-01"]+.[full_tx_marge[,1] == "2018-04-01"]+.[full_tx_marge[,1] == "2018-01-01"])/4) 
+full_tx_marge_2018t4 <- mutate_at(full_tx_marge, vars(-1), ~.-(.[full_tx_marge[,1] == "2019-10-01"]+.[full_tx_marge[,1] == "2019-07-01"]+.[full_tx_marge[,1] == "2019-04-01"]+.[full_tx_marge[,1] == "2019-01-01"])/4) 
 full_tx_marge_2018t4 <-  filter(full_tx_marge_2018t4,DATE ==date_max_compte_def |DATE == as.Date(date_max_compte_def)-months(3)) |>
   ###Attention:bien spécifier le trimestre ici 
   #filter(DATE == min(DATE)) |>
@@ -1997,7 +2214,8 @@ full_tx_marge_2018t4 <- pivot_longer(full_tx_marge_2018t4,cols=c(-1), names_to =
     Composante == "tx_marge_ternm"~"Tertiaire non marchand",
     Composante == "tx_marge_ag"~"Agriculture"
     
-  ))
+  )) %>% 
+  mutate(value = ifelse(Composante == "Cokéfaction-raffinage", NA_real_, value))
 
 valeur <- full_tx_marge_2018t4 |> filter(DATE == date_max_compte_def, Composante == "Marchand non agricole") |> pull(value) |> round(digits =1)
 
@@ -2101,11 +2319,11 @@ print(graph_tx_marge_energie_alim)
 ```{r,fig.dim = c(14, 9)}
 # graph_tx_prod <- ggplot(subset(ebe_superprofits, DATE >= as.Date('1970-01-01')), aes(x = DATE)) +
 #   geom_line(aes(y = marge_prod_energ, color = "Energie, eau, déchets"), size = 1.1)  +
-#   geom_line(aes(y = marge_prod_trans_service, color = "Services de transport"), size = 1.1)  + 
+#   geom_line(aes(y = marge_prod_trans_service, color = "Services de transport"), size = 1.1)  +
 #   geom_line(aes(y = marge_prod_raf, color = "Raffinerie"), size = 1.1) +
 #    geom_line(aes(y = marge_prod_alim, color = "Agro-alimentaire"), size = 1.1)  +
-#   labs(title = "EBE / Production par branche", 
-#        subtitle = "\nSource : Insee (Comptes trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior", 
+#   labs(title = "EBE / Production par branche",
+#        subtitle = "\nSource : Insee (Comptes trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior",
 #        y = "EBE / Production", x = "Année")  +
 #   scale_colour_manual(values = c("Energie, eau, déchets" = "brown",  "Services de transport"= "purple", "Agro-alimentaire" = "red", "Raffinerie" = "black")) +
 #   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
@@ -2118,44 +2336,44 @@ print(graph_tx_marge_energie_alim)
 #   theme(
 #         legend.position="bottom",
 #         plot.title.position ="plot",
-#         legend.title = element_text(size=9), 
+#         legend.title = element_text(size=9),
 #         legend.text = element_text(size=12),
 #         plot.title = element_text(color = "#333333", size = 16, face = "bold"),
 #         plot.subtitle = element_text(color = "#333333", size = 11,face = "italic"),
 #         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
 #         axis.title.y = element_text(hjust = 0.5)) +
-#   scale_x_date(limits = as.Date(c("1970-01-01", date_max_compte_def))) 
+#   scale_x_date(limits = as.Date(c("1970-01-01", date_max_compte_def)))
 # print(graph_tx_prod)
 ```
 
 ## Taux de marge de l'industrie cockéfaction - raffinage 
 ```{r, fig.dim=c(14,9)}
-graph_tx_marge_cock <- ggplot(subset(ebe_superprofits, DATE >= as.Date('2000-01-01')), aes(x = DATE)) +
-  geom_line(aes(y = tx_marge_raf_secteur, color = "Cockéfaction raffinage"), size = 1.1)  +
-  labs(title = "Taux de marge des secteurs énergétiques", 
-       
-       subtitle = paste("Lecture: Au",date_def_litt, ", le taux de marge de l'industrie de cockéfaction-raffinage est de", valeur <- ebe_superprofits |> filter(DATE == date_max_compte_def) |> pull(tx_marge_raf_secteur) |> round(digits = 0), "%.\nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"), 
-                        
-       y = "Taux de marge (en %)", x = "Année")  +
-  scale_colour_manual(values = c("Cockéfaction raffinage" = "black"))+
-  theme_ipsum( plot_margin = margin(0, 0, 0, 0),
-               plot_title_size = 18,
-               #subtitle_size = 9.5,
-               base_size = 12,
-               axis_title_size = 12,
-               axis_text_size = 12,
-               base_family = "Helvetica")  +
-  theme(
-        legend.position="bottom",
-        plot.title.position ="plot",
-        legend.title = element_text(size=9), 
-        legend.text = element_text(size=12),
-        plot.title = element_text(color = "#333333", size = 18, face = "bold"),
-        plot.subtitle = element_text(color = "#333333", size = 11,face = "italic"),
-        axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
-        axis.title.y = element_text(hjust = 0.5)) +
-  scale_x_date(limits = as.Date(c("2000-01-01", date_max_compte_def))) 
-print(graph_tx_marge_cock)
+# graph_tx_marge_cock <- ggplot(subset(ebe_superprofits, DATE >= as.Date('2000-01-01')), aes(x = DATE)) +
+#   geom_line(aes(y = tx_marge_raf_secteur, color = "Cockéfaction raffinage"), size = 1.1)  +
+#   labs(title = "Taux de marge des secteurs énergétiques", 
+#        
+#        subtitle = paste("Lecture: Au",date_def_litt, ", le taux de marge de l'industrie de cockéfaction-raffinage est de", valeur <- ebe_superprofits |> filter(DATE == date_max_compte_def) |> pull(tx_marge_raf_secteur) |> round(digits = 0), "%.\nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"), 
+#                         
+#        y = "Taux de marge (en %)", x = "Année")  +
+#   scale_colour_manual(values = c("Cockéfaction raffinage" = "black"))+
+#   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
+#                plot_title_size = 18,
+#                #subtitle_size = 9.5,
+#                base_size = 12,
+#                axis_title_size = 12,
+#                axis_text_size = 12,
+#                base_family = "Helvetica")  +
+#   theme(
+#         legend.position="bottom",
+#         plot.title.position ="plot",
+#         legend.title = element_text(size=9), 
+#         legend.text = element_text(size=12),
+#         plot.title = element_text(color = "#333333", size = 18, face = "bold"),
+#         plot.subtitle = element_text(color = "#333333", size = 11,face = "italic"),
+#         axis.title.x = element_text(hjust = 0.5),  # Centre le titre de l'axe x
+#         axis.title.y = element_text(hjust = 0.5)) +
+#   scale_x_date(limits = as.Date(c("2000-01-01", date_max_compte_def))) 
+# print(graph_tx_marge_cock)
 ```
 
 ## Taux de marge de l'industrie agro-alimentaire
@@ -2308,7 +2526,7 @@ graph_ebe_wage <- ggplot(subset(decompo_wage_ebe18, DATE >= as.Date('2018-01-01'
   geom_line(aes(y = ebe_marng, color = "Excédent Brut d'Exploitation"), size = 1.1)  +
   labs(title = "Evolution de la masse salariale et de l'excédent brut d'exploitation depuis 2018", 
        
-       subtitle = paste("Lecture: Depuis le 1er trimestre 2018, la masse salariale évolue", ifelse(valeur>0, "plus vite", "moins vite"), "que l'EBE. Sur le dernier trimestre, la croissance de la masse salariale a été", ifelse(decompo_wage_ebe18$croiss_trim_wage[decompo_wage_ebe18$DATE == max(decompo_wage_ebe18$DATE)]>decompo_wage_ebe18$croiss_trim_ebe[decompo_wage_ebe18$DATE == max(decompo_wage_ebe18$DATE)], "plus forte", "moins forte"), "que celle de l'EBE. \n Champ : Secteurs marchands non agricoles \nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
+       subtitle = paste("Lecture: Depuis le 1er trimestre 2018, la masse salariale évolue", ifelse(valeur>0, "moins vite", "plus vite"), "que l'EBE. Sur le dernier trimestre, la croissance de la masse salariale a été", ifelse(decompo_wage_ebe18$croiss_trim_wage[decompo_wage_ebe18$DATE == max(decompo_wage_ebe18$DATE)]>decompo_wage_ebe18$croiss_trim_ebe[decompo_wage_ebe18$DATE == max(decompo_wage_ebe18$DATE)], "plus forte", "moins forte"), "que celle de l'EBE. \n Champ : Secteurs marchands non agricoles \nSource : Insee (Comptes Nationaux Trimestriels, Résultats détaillés du", date_def_trim, ") \nCalculs et graphiques : @statjunior"),
        
        y = "Base 100 au 1er trimestre 2018", x = "Année") +
   scale_colour_manual(values = c("Masse salariale" = "#00B8E7", "Excédent Brut d'Exploitation" = "#F8766D")) +
