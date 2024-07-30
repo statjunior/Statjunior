@@ -1,15 +1,14 @@
 ---
-title: "Synthèse conjoncturelle des comptes des secteurs institutionnels"
+title: "Synthèse des comptes trimestriels : comptes d'agents"
 author: '@statjunior'
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   pdf_document:
     latex_engine: xelatex
-    template: eisvogel.tex
     keep_tex: yes
   word_document: default
-subtitle: Résultats détaillés des *Comptes Nationaux Trimestriels* au 2e trimestre
-  2023.
+subtitle: Résultats détaillés des *Comptes Nationaux Trimestriels* au 1er trimestre
+  2024.
 titlepage: yes
 titlepage-color: 9e8b10
 titlepage-text-color: FFFFFF
@@ -58,12 +57,17 @@ conflict_prefer("summarise", "dplyr")
 conflict_prefer("relocate", "dplyr")
 conflict_prefer("select", "dplyr")
 
-setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
+###Si sur poste Insee
+Sys.setenv(http_proxy="proxy-rie.http.insee.fr:8080")
+Sys.setenv(https_proxy="proxy-rie.http.insee.fr:8080")
+setwd <- setwd("C:/Users/ZHRRO8/Documents/Git_statjunior/Statjunior/Conjoncture - comptes trimestriels")
+
+# setwd <- setwd("C:/Users/gasto/Documents/GitHub/Statjunior/Conjoncture - comptes trimestriels/")
 getwd()
 
-date_max_compte_def <- "2023-01-01"
-date_def_litt <- "1er trimestre 2023"
-date_def_trim <- "T1-2023"
+date_max_compte_def <- "2024-01-01"
+date_def_litt <- "1er trimestre 2024"
+date_def_trim <- "T1-2024"
 ```
 
 # Présentation
@@ -74,9 +78,9 @@ Le rapport présente successivement les grands indicateurs macroéconomiques à 
 
 Pour les ménages, on présente d'abord le revenu disponible brut et les prix à la consommation en comptabilité nationale afin d'en déduire le pouvoir d'achat des ménages. Le pouvoir d'achat des ménages est un indicateur macroéconomique qui ne tient pas compte de la taille des ménages et des économies d'échelle. C'est pourquoi on présente également le pouvoir d'achat par unité de consommation (UC). Le pouvoir d'achat des ménages par UC tient compte de la croissance de la population et des économies ou d'échelle liées à la vie sous un même toit. Enfin, on présente les contributions à l'évolution du pouvoir d'achat afin de distinguer une variation liée aux revenus du travail, à la fiscalité, aux prestations ou aux revenus du capital. 
 
-Pour les entreprises, on s'intéresse principalement aux sociétés non financières (SNF). On présente tout d'abord leur taux de marge et leur taux d'investissement sur longue période. Puis, on décompose les contributions de l'évolution du taux de marge depuis 2018 (on retient l'année 2018 car l'année 2019 est biaisée par la baisse de CICE). 
+Pour les entreprises, on s'intéresse principalement aux sociétés non financières (SNF). On présente tout d'abord leur taux de marge et leur taux d'investissement sur longue période. Puis, on décompose les contributions de l'évolution du taux de marge depuis 2019. 
 
-On s'intéresse ensuite aux comptes des administrations publiques (APU). On présente l'évolution des recettes et des dépenses publiques sur longue période. On distingue ensuite l'évolution des dépenses par grande composante. Enfin, on présente l'évolution du déficit public sur longue période ainsi que la charge d'intérêt de la dette. 
+On s'intéresse ensuite aux comptes des administrations publiques (APU). On présente l'évolution des recettes et des dépenses publiques sur longue période ainsi que l'élasticité des recettes publiques par rapport au PIB. On distingue ensuite l'évolution des dépenses par grande composante. Enfin, on présente l'évolution du déficit public sur longue période ainsi que la charge d'intérêt de la dette. 
 
 Enfin, on présente la situation de financement de l'économie française vis à vis du reste du monde. 
 
@@ -88,13 +92,16 @@ Le code source permettant de générer ce document est disponible sur Git [en cl
 ```{r, echo=FALSE, message=FALSE, results='hide'}
 ############################### 0) PARAMETRES A FIXER AVANT DE FAIRE TOURNER LE CODE
 #Définir la date (YY-MM-DD) du dernier point de la Résultats détaillés des comptes trimestriels (1er trimestre 2023)
-date_max_compte_prov <- "2023-01-01"
+date_max_compte_prov <- "2024-04-01"
 #Définir la date (YY-MM-DD) du dernier point de l'estimation définitive des comptes trimestriels (1er trimestre 2023)
-date_max_compte_def <- "2023-01-01"
+date_max_compte_def <- "2024-01-01"
 
 
 ####Date de la base 100 pour les graphiques en niveau 
 scale_2019t4 <- function(x, na.rm = FALSE) x/x[rdb_menages[,1] == "2019-10-01"]*100
+scale_2019t4 <- function(x, na.rm = FALSE) x/x[rdb_menages[,1] == "2019-10-01"]*100
+scale_2021t4 <- function(x, na.rm = FALSE) x/x[rdb_menages[,1] == "2021-10-01"]*100
+
 scale_2018t4 <- function(x, na.rm = FALSE) x/x[cnt_cb_complet[,1] == "2018-10-01"]*100
 scale_2000t1 <- function(x, na.rm = FALSE) x/x[rdb_menages[,1] == "2000-01-01"]*100
 
@@ -121,16 +128,16 @@ decompo_tm_snf$DATE <- as.Date(decompo_tm_snf$DATE)
 ######################################### 1) Téléchargement des séries depuis le package Insee 
 #Contributions du PIB 
 list_idbank_pib = 
-  get_idbank_list("CNT-2014-PIB-EQB-RF") 
+  get_idbank_list("CNT-2020-PIB-EQB-RF") 
 
 #Extraction des numéros de séries 
 pib = list_idbank_pib %>% pull(idbank)
 #############################Décomposition du PIB par composante (C+FBCF+X-M+VS)
-pib_2014 = 
+pib_2020 = 
   get_insee_idbank(pib) %>% 
   split_title() 
 
-pib_2014_bis <- pib_2014 |>
+pib_2020_bis <- pib_2020 |>
   mutate(TITLE_FR1 = case_when(
     TITLE_FR1 == "Produit intérieur brut total"~"pib_tot",
     TITLE_FR1 == "Dépenses de consommation totales"~"conso_tot", 
@@ -172,7 +179,7 @@ pib_2014_bis <- pib_2014 |>
   mutate(TITLE_FR3 = ifelse(is.na(TITLE_FR3) & (TITLE_FR2 == "val" | TITLE_FR2 == "vol"), TITLE_FR2, TITLE_FR3))
 
 ###############################Calcul des contributions trimestrielles au PIB par composante
-contrib_pib_eer <- filter(pib_2014_bis, TITLE_FR2 =="contrib_pib") |>
+contrib_pib_eer <- filter(pib_2020_bis, TITLE_FR2 =="contrib_pib") |>
   pivot_wider(names_from = TITLE_FR1, values_from = OBS_VALUE, id_cols = DATE) |>
   mutate(croissance_pib = conso_men+conso_apu_ind+conso_apu_col+conso_isblsm+fbcf_tot+export_tot+vs_tot-import_tot) |>
   select(DATE, croissance_pib, conso_men,conso_apu_ind,conso_apu_col,conso_isblsm,fbcf_tot,export_tot,vs_tot,import_tot) |>
@@ -192,7 +199,7 @@ contrib_pib_eer$Composante<- as.factor(contrib_pib_eer$Composante)
 
 
 ####################################Calcul des déflateurs des composantes du PIB 
-pib_eer <- filter(pib_2014_bis, TITLE_FR2 !="contrib_pib" | is.na(TITLE_FR2)) |>
+pib_eer <- filter(pib_2020_bis, TITLE_FR2 !="contrib_pib" | is.na(TITLE_FR2)) |>
   select(-TITLE_FR2) |>
   mutate(titre = paste0(TITLE_FR1,"_", TITLE_FR3)) |>
   pivot_wider(names_from = titre, values_from = OBS_VALUE, id_cols = DATE) |>
@@ -244,15 +251,15 @@ rdb_uc <- select(rdb_uc, -rd_uc, -pa_rdb_uc)
 #taux d'épargne 
 
 list_idbank_csi = 
-  get_idbank_list("CNT-2014-CSI") 
+  get_idbank_list("CNT-2020-CSI") 
 
 csi = list_idbank_csi %>% pull(idbank)
 
-csi_2014 = 
+csi_2020 = 
   get_insee_idbank(csi) %>% 
   split_title() 
 
-liste_t1 <- distinct(csi_2014, TITLE_FR1)
+liste_t1 <- distinct(csi_2020, TITLE_FR1)
 
 
 
@@ -262,8 +269,9 @@ liste_t1 <- distinct(csi_2014, TITLE_FR1)
 # Compte des ménages 
 ## Revenu disponible brut et pouvoir d'achat depuis 2000
 ```{r,fig.dim = c(14, 16)}
+
 #########################Pouvoir d'achat des ménages de LT par rapport au PIB 
-rdb_menages <- filter(csi_2014, TITLE_FR1 == "Revenu disponible brut des ménages (y compris les entreprises individuelles)") |>
+rdb_menages <- filter(csi_2020, TITLE_FR1 == "Revenu disponible brut des ménages (y compris les entreprises individuelles)") |>
   select(DATE, OBS_VALUE) |>
   rename(rdbrut_menages = OBS_VALUE)
 pib_deflateur_conso_menages <- select(pib_eer, DATE, pib_tot_vol, deflateur_conso_men, pib_tot_val) 
@@ -277,11 +285,11 @@ rdb_menages_2019 <- mutate_at(rdb_menages, vars(-1), scale_2019t4)
 rdb_menages_2000 <- mutate(rdb_menages_2000,pa_menages = rdbrut_menages/deflateur_conso_men*100)
 rdb_menages_2019 <- mutate(rdb_menages_2019,pa_menages = rdbrut_menages/deflateur_conso_men*100)
 
-valeur2000 <- rdb_menages_2000 |> filter(DATE == max(DATE)) |>
+valeur2000 <- rdb_menages_2000 |> filter(DATE == date_max_compte_def) |>
   pull(rdbrut_menages) |> round(digits = 1)
 valeur2000 <- valeur2000 - 100
 
-valeurpa2000 <- rdb_menages_2000 |> filter(DATE == max(DATE)) |>
+valeurpa2000 <- rdb_menages_2000 |> filter(DATE == date_max_compte_def) |>
   pull(pa_menages) |> round(digits = 1)
 valeurpa2000 <- valeurpa2000 - 100
 
@@ -358,16 +366,16 @@ rm(valeur2000, valeurpa2000)
 ## Revenu disponible brut et pouvoir d'achat depuis 2019
 ```{r,fig.dim = c(14, 16)}
 valeur2019 <- rdb_menages_2019 |>
-  filter(DATE == max(DATE)) |> pull(rdbrut_menages) |>
+  filter(DATE == date_max_compte_def) |> pull(rdbrut_menages) |>
   round(digits = 1)
 valeur2019 <- valeur2019 - 100
 valeurpa2019 <- rdb_menages_2019 |>
-  filter(DATE == max(DATE)) |> pull(pa_menages) |>
+  filter(DATE == date_max_compte_def) |> pull(pa_menages) |>
   round(digits = 1)
 valeurpa2019 <- valeurpa2019 - 100
 valeurpa2019 <- round(valeurpa2019, digits =1)
 valeurpauc2019 <- rdb_menages_2019 |>
-  filter(DATE == max(DATE)) |> pull(cum_pa_uc) |>
+  filter(DATE == date_max_compte_def) |> pull(cum_pa_uc) |>
   round(digits = 1)
 valeurpauc2019 <- valeurpauc2019 - 100
 valeurpauc2019 <- round(valeurpauc2019, digits =1)
@@ -447,7 +455,7 @@ rm(valeur2019, valeurpa2019)
 ## Décomposition de l'évolution du pouvoir d'achat des ménages depuis 2019
 ```{r,fig.dim = c(14, 10)}
 ####Contribution au pouvoir d'achat 
-decompo_rdb_menages <- filter(csi_2014, TITLE_FR1 == "Excédent brut d'exploitation des ménages hors EI (y compris revenus mixtes)" |
+decompo_rdb_menages <- filter(csi_2020, TITLE_FR1 == "Excédent brut d'exploitation des ménages hors EI (y compris revenus mixtes)" |
                                 TITLE_FR1 == "Excédent brut d'exploitation des entrepreneurs individuels (y compris revenus mixtes)" |
                                 TITLE_FR1 =="Masse salariale reçue par les ménages (y compris les entreprises individuelles)" |
                               TITLE_FR1 =="Cotisations sociales employeurs reçues par les ménages (y compris les entreprises individuelles)" | 
@@ -562,17 +570,17 @@ decompo_rdb_menages_def <- decompo_rdb_menages_def |>
 decompo_rdb_menages_def <- mutate(decompo_rdb_menages_def, DATE2 = DATE+45)
 
 valeur0 <- decompo_rdb_menages_def |>
-  filter(DATE == max(DATE)) |>
+  filter(DATE == date_max_compte_def) |>
   pull(var_pa) |>
   round(digits = 1)
 
 valeur <- decompo_rdb_menages_def |>
-  filter(DATE == max(DATE), Composante == "Revenus d'activité") |>
+  filter(DATE == date_max_compte_def, Composante == "Revenus d'activité") |>
   pull(value) |>
   round(digits = 1)
 
 valeur2 <- decompo_rdb_menages_def |>
-  filter(DATE == max(DATE), Composante == "Prix à la consommation des ménages") |>
+  filter(DATE == date_max_compte_def, Composante == "Prix à la consommation des ménages") |>
   pull(value) |>
   round(digits = 1)
 plot_decompo_pa_menages <-  ggplot(data=decompo_rdb_menages_def, aes(x=DATE2, y=value, fill=forcats::fct_relevel(Composante, c("Revenus d'activité", 'EBE des ménages purs',
@@ -615,7 +623,7 @@ rm(valeur0, valeur, valeur2)
 
 ## Taux d'épargne des ménages
 ```{r,fig.dim = c(14, 9)}
-tx_ep_menage <- filter(csi_2014, TITLE_FR1 == "Épargne des ménages (y compris les entreprises individuelles)" |
+tx_ep_menage <- filter(csi_2020, TITLE_FR1 == "Épargne des ménages (y compris les entreprises individuelles)" |
                                  TITLE_FR1 == "Revenu disponible brut des ménages (y compris les entreprises individuelles)" | 
                                  TITLE_FR1 == "Capacité (+) ou besoin (-) de financement des ménages (y compris les entreprises individuelles)") |>
      mutate(TITLE_FR1 = case_when(
@@ -634,7 +642,7 @@ plot_tx_epargne_men <-ggplot(data = tx_ep_menage,
     geom_line(aes(y = tx_epargne_financiere, color = "Taux d'épargne financière des ménages"), size = 1.1) + 
     labs(title = "Taux d'épargne des ménages", 
          
-         subtitle = paste0("Lecture: Au ", date_def_litt, ", le taux d'épargne des ménages est de ", valeur <- tx_ep_menage |>filter(DATE == max(DATE)) |> pull(tx_epargne) |> round(digits =1)   , " %. Le taux d'épargne financière des ménages est de ",  valeur2 <- tx_ep_menage |>filter(DATE == max(DATE)) |> pull(tx_epargne_financiere) |> round(digits =1), " %. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
+         subtitle = paste0("Lecture: Au ", date_def_litt, ", le taux d'épargne des ménages est de ", valeur <- tx_ep_menage |>filter(DATE == date_max_compte_def) |> pull(tx_epargne) |> round(digits =1)   , " %. Le taux d'épargne financière des ménages est de ",  valeur2 <- tx_ep_menage |>filter(DATE == date_max_compte_def) |> pull(tx_epargne_financiere) |> round(digits =1), " %. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
   
                   y = "Pourcentage (%)", x = "Année") +
     scale_x_date(limits = as.Date(c("2000-01-01", NA))) + 
@@ -666,7 +674,7 @@ rm(valeur, valeur2)
 # Compte des sociétés non financières (SNF)
 ## Taux de marge et taux d'investissement des SNF sur longue période
 ```{r,fig.dim = c(14, 9)}
-compte_snf <- filter(csi_2014, TITLE_FR1 == "Excédent brut d'exploitation des sociétés non financières" |
+compte_snf <- filter(csi_2020, TITLE_FR1 == "Excédent brut d'exploitation des sociétés non financières" |
                             TITLE_FR1 == "Valeur ajoutée des sociétés non financières" | 
                             TITLE_FR1 == "Épargne des sociétés non financières" |
                              TITLE_FR1 == "Formation brute de capital fixe des sociétés non financières") |>
@@ -689,7 +697,7 @@ plot_compte_snf <-ggplot(data = compte_snf,
   #geom_line(aes(y = tx_autofinancement_snf, color = "Taux d'autofinancement"), size = 1.3) + 
   labs(title = "Taux de marge et d’investissement des sociétés non financières", 
        
-       subtitle = paste0("Lecture: Au ", date_def_litt, ", le taux de marge des Sociétés Non Financières (SNF) est de ", valeur <- compte_snf |>filter(DATE == max(DATE)) |> pull(tx_marge_snf) |> round(digits =1)   , " %. Le taux d'invesitssement des SNF est de ",  valeur2 <- compte_snf |>filter(DATE == max(DATE)) |> pull(tx_fbcf_snf) |> round(digits =1), " %. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
+       subtitle = paste0("Lecture: Au ", date_def_litt, ", le taux de marge des Sociétés Non Financières (SNF) est de ", valeur <- compte_snf |>filter(DATE == date_max_compte_def) |> pull(tx_marge_snf) |> round(digits =1)   , " %. Le taux d'invesitssement des SNF est de ",  valeur2 <- compte_snf |>filter(DATE == date_max_compte_def) |> pull(tx_fbcf_snf) |> round(digits =1), " %. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
   
        y = "% de la valeur ajoutée des SNF", x = "Année") +
   scale_x_date(limits = as.Date(c("1970-10-01", NA))) + 
@@ -718,25 +726,25 @@ rm(valeur, valeur2)
 
 ## Décomposition du taux des marges des SNF depuis 2018
 ```{r,fig.dim = c(14, 9)}
-decompo_tm_snf_2018t4 <- filter(decompo_tm_snf, DATE >as.Date('2018-10-10')) |>
+decompo_tm_snf_2019t4 <- filter(decompo_tm_snf, DATE >as.Date('2019-10-10')) |>
   mutate(sum_var_tx_marge = sum(var_tx_marge)) |>
   mutate(sum_prod = sum(contrib_productivite)) |>
   mutate(sum_sal = sum(contrib_sal_reel)) |>
   mutate(sum_cotsoc = sum(contrib_cot_soc)) |>
   mutate(sum_echange = sum(contrib_terme_echange)) |>
   mutate(sum_autres = sum(contrib_autres_facteurs)) |>
-  filter(DATE == max(DATE)) |>
+  filter(DATE == date_max_compte_def) |>
   select(DATE, sum_var_tx_marge, sum_prod, sum_sal, sum_cotsoc, sum_echange, sum_autres) |> 
   rename(c("Taux de marge"="sum_var_tx_marge", "Productivité" = sum_prod, "Masse salariale réelle" = sum_sal, 
            "Cotisations sociales" = "sum_cotsoc", "Termes de l'échange" = "sum_echange", "Autres facteurs" = sum_autres)) |>
   pivot_longer(cols=c(-1), names_to = "Composante", values_to = "value")
 
-valeur <- decompo_tm_snf_2018t4 |>
-  filter(DATE == max(DATE), Composante == "Taux de marge") |> pull(value) |> round(digits =1)
-valeur2 <- decompo_tm_snf_2018t4 |>
-  filter(DATE == max(DATE), Composante == "Masse salariale réelle") |> pull(value) |> round(digits =1)
+valeur <- decompo_tm_snf_2019t4 |>
+  filter(DATE == date_max_compte_def, Composante == "Taux de marge") |> pull(value) |> round(digits =1)
+valeur2 <- decompo_tm_snf_2019t4 |>
+  filter(DATE == date_max_compte_def, Composante == "Masse salariale réelle") |> pull(value) |> round(digits =1)
 
-plot_decompo_tm_snf_2018 <-ggplot(data = decompo_tm_snf_2018t4,
+plot_decompo_tm_snf_2018 <-ggplot(data = decompo_tm_snf_2019t4,
                                   aes(x = forcats::fct_relevel(Composante, c("Taux de marge", "Productivité","Masse salariale réelle","Cotisations sociales",
                                                                              "Termes de l'échange","Autres facteurs"), after = 1),
                                       y = value, fill = forcats::fct_relevel(Composante, c("Taux de marge", "Productivité","Masse salariale réelle","Cotisations sociales",
@@ -744,11 +752,11 @@ plot_decompo_tm_snf_2018 <-ggplot(data = decompo_tm_snf_2018t4,
   #fill=factor(ifelse(Composante=="Taux de marge","Highlighted","Normal")
   
   geom_col(position = "dodge", show.legend = FALSE) +
-  labs(title = "Décomposition de la variation du taux de marge des sociétés non financières depuis la fin 2018", 
+  labs(title = "Décomposition de la variation du taux de marge des sociétés non financières depuis la fin 2019", 
        
-       subtitle = paste0("Lecture: Au ", date_def_litt, ", le taux de marge des SNF ", ifelse(valeur>0, "augmente", "recule"), " de ", valeur, " point depuis le T4-2018. \nLecture: L'évolution de la masse salariale réelle contribue ", ifelse(valeur2 >0, "positivement", "négativement"), " à hauteur de ", valeur2, " points à la variation du taux de marge. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
+       subtitle = paste0("Lecture: Au ", date_def_litt, ", le taux de marge des SNF ", ifelse(valeur>0, "augmente", "recule"), " de ", valeur, " point depuis le T4-2019. \nLecture: L'évolution de la masse salariale réelle contribue ", ifelse(valeur2 >0, "positivement", "négativement"), " à hauteur de ", valeur2, " points à la variation du taux de marge. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
        
-       y = "Variation en points de pourcentage par rapport au 4e trimestre 2018", x = "Facteur de contribution") +
+       y = "Variation en points de pourcentage par rapport au 4e trimestre 2019", x = "Facteur de contribution") +
   #scale_color_manual(name = "Composante", values=c("red","grey50","grey50","grey50","grey50","grey50")) 
   scale_fill_manual(values=c("orange", "#00B8E7", "#00B8E7", "#00B8E7", "#00B8E7", "#00B8E7")) + 
   theme_ipsum( plot_margin = margin(0, 0, 0, 0),
@@ -774,7 +782,7 @@ rm(valeur, valeur2)
 
 
 ```{r, echo=FALSE, message=FALSE, results='hide'}
-recette_apu <- filter(csi_2014, TITLE_FR1 == "TVA reçue par les administrations publiques" | 
+recette_apu <- filter(csi_2020, TITLE_FR1 == "TVA reçue par les administrations publiques" | 
                         TITLE_FR1 =="Droits de douane reçus par les administrations publiques"|
                         TITLE_FR1 =="Impôts sur les produits reçus par les administrations publiques"|
                         TITLE_FR1 =="Impôts sur la main d'oeuvre reçus par les administrations publiques"|
@@ -918,7 +926,7 @@ plot_deficit_apu_pib <- ggplot(data = recette_apu,
   
   labs(title = "Recettes et dépenses des administrations publiques rapportées au PIB",
        
-       subtitle = paste0("Lecture: Au ", date_def_litt, ", les recettes des APU représentent ", valeur <- recette_apu |> filter(DATE == max(DATE)) |> pull(tot_recettes_apu_pib) |> round(digits =1), " % du PIB et les dépenses des APU représentent ", valeur2 <- recette_apu |> filter(DATE == max(DATE)) |> pull(tot_depenses_apu_pib) |> round(digits =1), " % du PIB.\nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
+       subtitle = paste0("Lecture: Au ", date_def_litt, ", les recettes des APU représentent ", valeur <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(tot_recettes_apu_pib) |> round(digits =1), " % du PIB et les dépenses des APU représentent ", valeur2 <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(tot_depenses_apu_pib) |> round(digits =1), " % du PIB.\nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
        
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1980-01-01", NA))) + 
@@ -970,12 +978,12 @@ structure_po2 <- select(recette_apu, DATE, pib_tot_val,tot_recettes_apu, taxe_co
   mutate(title2 = ifelse(title == "Ensemble des prélèvements obligatoires","Ensemble des PO", "Part de chaque PO"))
 
 valeur <- structure_po2 %>%
-  filter(DATE == max(DATE), title == "Impôts nets de subvention sur la production") %>%
+  filter(DATE == date_max_compte_def, title == "Impôts nets de subvention sur la production") %>%
   pull(OBS_VALUE)  %>%
   round(digits = 1)
 
 valeur2 <- structure_po2 %>%
-  filter(DATE == max(DATE), title == "Ensemble des prélèvements obligatoires") %>%
+  filter(DATE == date_max_compte_def, title == "Ensemble des prélèvements obligatoires") %>%
   pull(OBS_VALUE)  %>%
   round(digits = 1)
 
@@ -1039,7 +1047,7 @@ structure_po <- select(recette_apu, DATE, tot_recettes_apu, taxe_conso, taxe_pro
   filter(DATE >= as.Date('1980-01-01'))
 
 valeur <- structure_po %>%
-  filter(DATE == max(DATE), title == "Impôts nets de subventions sur la production") %>%
+  filter(DATE == date_max_compte_def, title == "Impôts nets de subventions sur la production") %>%
   pull(percent)  %>%
   round(digits = 1)
 
@@ -1095,12 +1103,12 @@ elasticite_po <- select(recette_apu, DATE, def_recette, def_pib) |>
 elasticite_po1 <- filter(elasticite_po, title !="Elasticité des recettes")
 elasticite_po2 <- filter(elasticite_po, title =="Elasticité des recettes")
 valeur1 <- elasticite_po1 %>%
-  filter(DATE == max(DATE), title == "Glissement annuel des recettes des APU") %>%
+  filter(DATE == date_max_compte_def, title == "Glissement annuel des recettes des APU") %>%
   pull(OBS_VALUE)  %>%
   round(digits = 1)
 
 valeur11 <- elasticite_po1 %>%
-  filter(DATE == max(DATE), title == "Glissement annuel du PIB valeur") %>%
+  filter(DATE == date_max_compte_def, title == "Glissement annuel du PIB valeur") %>%
   pull(OBS_VALUE)  %>%
   round(digits = 1)
 
@@ -1136,7 +1144,7 @@ print(plot_elasticite_po)
 ```
 ```{r, fig.dim= c(14,8)}
 valeur2 <- elasticite_po2 %>%
-  filter(DATE == max(DATE), title == "Elasticité des recettes") %>%
+  filter(DATE == date_max_compte_def, title == "Elasticité des recettes") %>%
   pull(OBS_VALUE)  %>%
   round(digits = 1)
 
@@ -1189,7 +1197,7 @@ dynamisme_recettes <- filter(dynamisme_recettes, DATE == max(DATE) |DATE==max(dy
 
 
 valeur <- dynamisme_recettes %>%
-  filter(DATE == max(DATE), title == "Recettes totales") %>%
+  filter(DATE == date_max_compte_def, title == "Recettes totales") %>%
   pull(OBS_VALUE)  %>%
   round(digits = 1)
 
@@ -1238,7 +1246,7 @@ plot_dep_fonctionnement_apu_pib <- ggplot(data = recette_apu,
                                    aes(x = DATE)) +
   geom_line(aes(y = depenses_fonctionnement_pib, color = "Dépenses de fonctionnement"), size = 1.3) + 
   labs(title = "Total des dépenses de fonctionnement", 
-       subtitle = paste0("Lecture: Au ", date_def_litt, ", les dépenses de fonctionnement représentent ", valeur <- recette_apu |> filter(DATE == max(DATE)) |> pull(depenses_fonctionnement_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior"), 
+       subtitle = paste0("Lecture: Au ", date_def_litt, ", les dépenses de fonctionnement représentent ", valeur <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(depenses_fonctionnement_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : ", date_max_compte_def ,") \nCalculs et graphiques : @statjunior"), 
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1980-01-01", NA))) + 
   scale_color_manual(values = c("Dépenses de fonctionnement"="blue"))+
@@ -1266,7 +1274,7 @@ plot_subventions_apu_pib <- ggplot(data = recette_apu,
                                aes(x = DATE)) +
   geom_line(aes(y = depenses_subventions_apu_pib, color = "Total des subventions"), size = 1.3) + 
   labs(title = "Subventions versées par les administrations publiques", 
-              subtitle = paste0("Lecture: Au ", date_def_litt, ", les subventions représentent ", valeur <- recette_apu |> filter(DATE == max(DATE)) |> pull(depenses_subventions_apu_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior"),
+              subtitle = paste0("Lecture: Au ", date_def_litt, ", les subventions représentent ", valeur <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(depenses_subventions_apu_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : ", date_max_compte_def ,") \nCalculs et graphiques : @statjunior"),
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1980-01-01", NA))) + 
   scale_color_manual(values = c("Total des subventions"="purple"))+
@@ -1293,7 +1301,7 @@ plot_interet_verses_apu_pib <- ggplot(data = recette_apu,
                                    aes(x = DATE)) +
   geom_line(aes(y = depenses_interet_pib, color = "Total des intérêts versés"), size = 1.3) + 
   labs(title = "Charges d'intérêts versées par les administrations publiques", 
-       subtitle = paste0("Lecture: Au ", date_def_litt, ", la charge d'intérêt représente ", valeur <- recette_apu |> filter(DATE == max(DATE)) |> pull(depenses_interet_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior"),
+       subtitle = paste0("Lecture: Au ", date_def_litt, ", la charge d'intérêt représente ", valeur <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(depenses_interet_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : ", date_max_compte_def ,") \nCalculs et graphiques : @statjunior"),
 
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1980-01-01", NA))) + 
@@ -1321,7 +1329,7 @@ plot_transferts_sociaux_nature_pib <- ggplot(data = recette_apu,
                                       aes(x = DATE)) +
   geom_line(aes(y = depenses_transferts_sociaux_pib, color = "Total des transferts sociaux ou marchands en nature"), size = 1.3) + 
   labs(title = "Transferts sociaux et apparentés (en espèce ou en nature)", 
-       subtitle = paste0("Lecture: Au ", date_def_litt, ", les transferts sociaux représentent ", valeur <- recette_apu |> filter(DATE == max(DATE)) |> pull(depenses_transferts_sociaux_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior"),
+       subtitle = paste0("Lecture: Au ", date_def_litt, ", les transferts sociaux représentent ", valeur <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(depenses_transferts_sociaux_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : ", date_max_compte_def ,") \nCalculs et graphiques : @statjunior"),
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1980-01-01", NA))) + 
   scale_color_manual(values = c("Total des transferts sociaux ou marchands en nature"="#FF33FF"))+
@@ -1348,7 +1356,7 @@ plot_autres_transferts_pib <- ggplot(data = recette_apu,
                                              aes(x = DATE)) +
   geom_line(aes(y = depenses_autres_transferts_pib, color = "Autres transferts entre administrations"), size = 1.3) + 
   labs(title = "Transferts entre administrations", 
-        subtitle = paste0("Lecture: Au ", date_def_litt, ", les transferts entre administrations représentent ", valeur <- recette_apu |> filter(DATE == max(DATE)) |> pull(depenses_autres_transferts_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior"),
+        subtitle = paste0("Lecture: Au ", date_def_litt, ", les transferts entre administrations représentent ", valeur <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(depenses_autres_transferts_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : ", date_max_compte_def ,") \nCalculs et graphiques : @statjunior"),
        
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1980-01-01", NA))) + 
@@ -1377,7 +1385,7 @@ plot_investissement_apu_pib <- ggplot(data = recette_apu,
   geom_line(aes(y = depenses_investissement_pib, color = "Dépenses reliées à l'investissement"), size = 1.3) + 
   labs(title = "Dépenses reliées à l'investissement", 
        
-               subtitle = paste0("Lecture: Au ", date_def_litt, ", les dépenses d'investissement représentent ", valeur <- recette_apu |> filter(DATE == max(DATE)) |> pull(depenses_investissement_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : 1er trimestre 2023) \nCalculs et graphiques : @statjunior"),
+               subtitle = paste0("Lecture: Au ", date_def_litt, ", les dépenses d'investissement représentent ", valeur <- recette_apu |> filter(DATE == date_max_compte_def) |> pull(depenses_investissement_pib) |> round(digits =1), " % du PIB. \nSource : Insee (Comptes nationaux Trimestriels - Dernier point : ", date_max_compte_def ,") \nCalculs et graphiques : @statjunior"),
        
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1980-01-01", NA))) + 
@@ -1412,7 +1420,7 @@ print(plot_decompo_depenses)
 ## Taux de déficit public des APU (avec et hors charge d'intérêt)
 ```{r,fig.dim = c(14, 9)}
 #######Déficit des APU
-deficit_apu <- filter(csi_2014, TITLE_FR1 == "Capacité (+) ou besoin (-) de financement des administrations publiques" | 
+deficit_apu <- filter(csi_2020, TITLE_FR1 == "Capacité (+) ou besoin (-) de financement des administrations publiques" | 
                         TITLE_FR1 == "Intérêts reçus par les administrations publiques" | 
                         TITLE_FR1 =="Intérêts versés par les administrations publiques") |>
   mutate(TITLE_FR1 = case_when(
@@ -1439,7 +1447,7 @@ plot_deficit_apu_pib <- ggplot(data = deficit_apu,
   geom_hline(yintercept=-3, linetype="dashed", color = "black") +
   labs(title = "Déficit public des APU et déficit primaire hors charge d'intérêt rapporté au PIB", 
        
-        subtitle = paste0("Lecture: Au ", date_def_litt, ", le déficit public est de ", valeur <-deficit_apu |>filter(DATE == max(DATE)) |> pull(def_total_pib) |> round(digits =1), " % du PIB. Le déficit primaire (hors charge d'intérêt) est de ", valeur2 <- deficit_apu |>filter(DATE == max(DATE)) |> pull(def_primaire_pib) |> round(digits =1), " % du PIB. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
+        subtitle = paste0("Lecture: Au ", date_def_litt, ", le déficit public est de ", valeur <-deficit_apu |>filter(DATE == date_max_compte_def) |> pull(def_total_pib) |> round(digits =1), " % du PIB. Le déficit primaire (hors charge d'intérêt) est de ", valeur2 <- deficit_apu |>filter(DATE == date_max_compte_def) |> pull(def_primaire_pib) |> round(digits =1), " % du PIB. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
        
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1970-10-01", NA))) + 
@@ -1468,7 +1476,7 @@ print(plot_deficit_apu_pib)
 
 ## Charge d'intérêt nette (versée - reçue) des administrations publiques
 ```{r,fig.dim = c(14, 16)}
-interet_apu <- filter(csi_2014, TITLE_FR1 == "Intérêts reçus par les administrations publiques" | 
+interet_apu <- filter(csi_2020, TITLE_FR1 == "Intérêts reçus par les administrations publiques" | 
                        TITLE_FR1 =="Intérêts versés par les administrations publiques") |>
   mutate(TITLE_FR1 = case_when(
     TITLE_FR1 == "Intérêts reçus par les administrations publiques"~"interet_recu_apu", 
@@ -1486,7 +1494,7 @@ plot_interet_val <- ggplot(data = interet_apu,
   geom_line(aes(y = interet_net), color = "#00B8E7", size = 1.3) + 
   labs(title = "Charge d'intérêt nette nominale des administrations publiques", 
        
-        subtitle = paste0("Lecture: Au ", date_def_litt, ", la charge d'intérêt nette des APU est de ",valeur <- interet_apu |> filter(DATE == max(DATE)) |> pull(interet_net) |> round(digits =1), " milliards d'euros. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
+        subtitle = paste0("Lecture: Au ", date_def_litt, ", la charge d'intérêt nette des APU est de ",valeur <- interet_apu |> filter(DATE == date_max_compte_def) |> pull(interet_net) |> round(digits =1), " milliards d'euros. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
        
        y = "Milliards d'€", x = "Année") +
   scale_x_date(limits = as.Date(c("1970-10-01", NA))) + 
@@ -1514,7 +1522,7 @@ plot_interet_pib <- ggplot(data = interet_apu,
   geom_line(aes(y = interet_pib), color = "#00B8E7", size = 1.3) + 
   labs(title = "Charge d'intérêt nette des administrations publiques en proportion du PIB nominal", 
        
-      subtitle = paste0("Lecture: Au ", date_def_litt, ", la charge d'intérêt nette des APU représente ",valeur <- interet_apu |> filter(DATE == max(DATE)) |> pull(interet_pib) |> round(digits =1), " % du PIB nominal. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
+      subtitle = paste0("Lecture: Au ", date_def_litt, ", la charge d'intérêt nette des APU représente ",valeur <- interet_apu |> filter(DATE == date_max_compte_def) |> pull(interet_pib) |> round(digits =1), " % du PIB nominal. \nSource : Insee - Comptes nationaux trimestriels (Résultats détaillés du ", date_def_litt,"). \nCalculs et graphiques : @statjunior"),
       
        y = "% du PIB valeur", x = "Année") +
   scale_x_date(limits = as.Date(c("1970-10-01", NA))) + 
@@ -1546,7 +1554,7 @@ print(plot_interet_apu)
 
 # Capacité ou Besoin de financement vis-à-vis du Reste du monde
 ```{r,fig.dim = c(14, 9)}
-capbesfi <- filter(csi_2014, TITLE_FR1 == "Capacité (+) ou besoin (-) de financement du reste du monde" |
+capbesfi <- filter(csi_2020, TITLE_FR1 == "Capacité (+) ou besoin (-) de financement du reste du monde" |
                      TITLE_FR1 == "Capacité (+) ou besoin (-) de financement des sociétés non financières" | 
                      TITLE_FR1 == "Capacité (+) ou besoin (-) de financement des ISBLSM" |
                      TITLE_FR1 == "Capacité (+) ou besoin (-) de financement des administrations publiques" |
@@ -1585,13 +1593,13 @@ capbesfi <- left_join(capbesfi, pib_deflateur_conso_menages, by = "DATE") |>
   mutate(capbesfi_total_pib = -capbesfi_total_pib) |>
   mutate(capbesfi_total_pib = round(capbesfi_total_pib, 2))
 
-valeur <- capbesfi |> filter(DATE == max(DATE)) |> pull(capbesfi_total_pib) |>
+valeur <- capbesfi |> filter(DATE == date_max_compte_def) |> pull(capbesfi_total_pib) |>
   round(digits = 1)
-valeur2 <- capbesfi |> filter(DATE == max(DATE), Composante == "Sociétés non financières") |> pull(value) |>
+valeur2 <- capbesfi |> filter(DATE == date_max_compte_def, Composante == "Sociétés non financières") |> pull(value) |>
   round(digits = 1)
-valeur3 <- capbesfi |> filter(DATE == max(DATE), Composante == "Ménages") |> pull(value) |>
+valeur3 <- capbesfi |> filter(DATE == date_max_compte_def, Composante == "Ménages") |> pull(value) |>
   round(digits = 1)
-valeur4 <- capbesfi |> filter(DATE == max(DATE), Composante == "APU") |> pull(value) |>
+valeur4 <- capbesfi |> filter(DATE == date_max_compte_def, Composante == "APU") |> pull(value) |>
   round(digits = 1)
 
 plot_capbesfi <-  ggplot(data=capbesfi, aes(x=DATE, y=value, fill=forcats::fct_relevel(Composante, c("Ménages", 
